@@ -1,0 +1,64 @@
+<head>
+    <%- include('pieces/metadata') %>
+    <title>Reboot 16 | <%= profileUser.username %>'s profile</title>
+</head>
+
+<body>
+    <%- include('pieces/header') %>
+
+    <div class="content" style="text-align: center;">
+        <h1><%= profileUser.username %>'s Profile</h1>
+
+        <div class="characterPanels">
+            <div class="leftCharacterPanel">
+                <h2>Avatar</h2>
+                <img src="/api/get-thumbnail/player?id=<%= profileUser.id %>" onerror="this.onerror=null;this.src='/api/get-thumbnail/player?id=0'">
+                
+                <% if (isOwnProfile) { %>
+                    <br>
+                    <a href="/logout">Logout</a> <br>
+                    <a href="/settings">Settings</a>
+                <% } %>
+            </div>
+
+            <div class="rightPanelsContainer">
+                <div class="rightCharacterPanel">
+                    <h2>Bio</h2>
+                    <p><%= profileUser.bio %></p>
+                </div>
+
+                <div class="rightCharacterPanel">
+                    <h2>Games</h2>
+                    <!-- 
+                    <div class="item" style="width: 125px;">
+                        <img src="/api/get-thumbnail/place?id=1" style="width: 100%;">
+                        <p class="nameOverlay">Game Name</p>
+                    </div>
+                    -->
+                </div>
+
+                <div class="rightCharacterPanel">
+                    <h2>Inventory</h2>
+                    <div class="item" style="width: 75px; float: left; text-align: left; padding-left: 15px;">
+                        <br>
+                        <a>Hats</a> <br><br>
+                        <a>Shirts</a> <br><br>
+                        <a>TShirts</a> <br><br>
+                        <a>Pants</a> <br><br>
+                        <a>Royals</a>
+                        <br><br>
+                    </div>
+
+                     <!-- 
+                    <div class="item" style="width: 125px;">
+                        <img src="/api/get-thumbnail/place?id=1" style="width: 100%;">
+                        <p class="nameOverlay">Item Name</p>
+                    </div>
+                     -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('pieces/footer') %>
+</body>

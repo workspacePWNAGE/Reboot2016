@@ -170,6 +170,12 @@ body {
     gap: 15px;
 }
 
+.content .rightPanelsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
 .content .leftCharacterPanel,
 .content .rightCharacterPanel {
     margin: 0;
@@ -178,12 +184,14 @@ body {
 .content .leftCharacterPanel {
     width: 415px;
     text-align: center;
-    border: 1px solid #818181;
+    background-color: rgba(0, 0, 0, 0.156);
     padding-bottom: 15px;
 }
 
 .content .leftCharacterPanel img {
-    width: 600px;
+    width: 100%;
+    max-width: 600px;
+    height: auto;
 }
 
 .content .leftCharacterPanel p a {
@@ -194,14 +202,16 @@ body {
 .content .rightCharacterPanel {
     width: 715px;
     text-align: center;
-    border: 1px solid #818181;
+    background-color: rgba(0, 0, 0, 0.156);
     padding-bottom: 15px;
 }
 
 .content .rightCharacterPanel .item {
-    margin-left: 10px;
+    display: inline-block;
+    vertical-align: top;
+    margin: 5px;
     position: relative;
-    border: 1px solid #818181;
+    background-color: rgba(0, 0, 0, 0.156);
     width: 100px;
 }
 

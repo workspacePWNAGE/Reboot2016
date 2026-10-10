@@ -6,11 +6,17 @@ const { authLimiter } = require('./rateLimiter');
 const { checkBan } = require('./bans');
 const { isReservedUsername } = require('./usernames');
 const { setSessionCookie } = require('./session');
+const { TURNSTILE_KEY } = require('./config');
 
 const router = express.Router();
 
 router.post('/api/register-user', authLimiter, async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, token } = req.body;
+
+    const isValidCaptcha = await verifyTurnstile(token, req.ip);
+    if (!isValidCaptcha) {
+        return res.status(400).json({ error: "Please complete the captcha!" });
+    }
 
     if (!username || !password) {
         return res.status(400).json({ error: "Username and password are required." });
@@ -59,6 +65,12 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
 
 router.post('/api/login-user', authLimiter, async (req, res) => {
     const { username, password, token } = req.body;
+
+    const isValidCaptcha = await verifyTurnstile(token, req.ip);
+    if (!isValidCaptcha) {
+        return res.status(400).json({ error: "Please complete the captcha!" });
+    }
+
     const users = readUsers();
 
     if (token) {
@@ -119,5 +131,26 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
         user: userData
     });
 });
+
+async function verifyTurnstile(token, ip) {
+    if (!token) return false;
+
+    try {
+        const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                secret: TURNSTILE_KEY,
+                response: token,
+                remoteip: ip
+            })
+        });
+        const data = await res.json();
+        return data.success;
+    } catch (err) {
+        console.error('Turnstile verification error:', err);
+        return false;
+    }
+}
 
 module.exports = router;

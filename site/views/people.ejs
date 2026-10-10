@@ -47,8 +47,10 @@
             <div class="peopleContainer">
                 <% people.forEach(person => { %>
                     <div class="personCard">
-                        <img src="/api/get-thumbnail/player?id=<%= person.id %>" onerror="this.onerror=null;this.src='/api/get-thumbnail/player?id=0'">
-                        <a><%= person.username %> | <%= person.id %></a>
+                        <a href="/profile?id=<%= person.id %>">
+                            <img src="/api/get-thumbnail/player?id=<%= person.id %>" onerror="this.onerror=null;this.src='/api/get-thumbnail/player?id=0'">
+                            <span><%= person.username %> | <%= person.id %></span>
+                        </a>
                     </div>
                 <% }) %>
             </div>

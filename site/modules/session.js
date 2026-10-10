@@ -98,4 +98,9 @@ router.post('/logout', (req, res) => {
     res.redirect('/');
 });
 
+router.get('/logout', (req, res) => {
+    clearSessionCookie(req, res);
+    res.redirect('/');
+});
+
 module.exports = { middleware, router, requireLogin, requireRole, setSessionCookie, clearSessionCookie };

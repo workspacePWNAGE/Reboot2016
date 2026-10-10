@@ -1,6 +1,8 @@
 <head>
     <%- include('pieces/metadata') %>
     <title>Reboot 16 | Sign up</title>
+    <link rel="preconnect" href="https://challenges.cloudflare.com" />
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body>
@@ -23,6 +25,8 @@
             <h1>Re-type your Password</h1>
             <h2>Make sure you typed it correctly!</h2>
             <input type="password" name="confirm" placeholder="Re-type Password" autocomplete="new-password" maxlength="128" required> <br><br>
+
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAAFTaiTGdkfynblAX"></div> <br><br>
                 
             <input type="submit" id="signupSubmit" value="Sign Up" style="padding: 5px 30px;">
         </form>
@@ -56,10 +60,13 @@
             submitBtn.value = 'Signing up...';
 
             try {
+                const formData = new FormData(form);
+                const turnstileResponse = formData.get('cf-turnstile-response');
+
                 const res = await fetch('/api/register-user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username, password, token: turnstileResponse })
                 });
 
                 let data = {};

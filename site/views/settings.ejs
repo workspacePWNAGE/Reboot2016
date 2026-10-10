@@ -1,0 +1,58 @@
+<head>
+    <%- include('pieces/metadata') %>
+    <title>Reboot 16 | Settings</title>
+</head>
+
+<body>
+    <%- include('pieces/header') %>
+
+    <div class="content" style="text-align: center;">
+        <h1 class="authTitle">Settings</h1>
+        <br><br>
+
+        <h2>Bio</h2>
+        <h3 id="settingsError" style="color: #c00; display: none;"></h3>
+        <h3 id="settingsSuccess" style="color: #0c0; display: none;"></h3>
+        
+        <form id="bioForm">
+            <input id="bioInput" style="width: 500px;" type="text" name="bio" value="<%= bio %>" placeholder="This is your bio! Write here to tell people about yourself. (Max 200 Characters)" maxlength="200"> <br><br>
+            <input type="submit" id="bioSubmit" value="Change Bio">
+        </form>
+    </div>
+
+    <%- include('pieces/footer') %>
+
+    <script>
+        const form = document.getElementById('bioForm');
+        const bioInput = document.getElementById('bioInput');
+        const errorBox = document.getElementById('settingsError');
+        const successBox = document.getElementById('settingsSuccess');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+            successBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/update-bio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bio: bioInput.value })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    errorBox.textContent = data.error || 'Failed to update bio.';
+                    errorBox.style.display = 'block';
+                } else {
+                    successBox.textContent = data.message || 'Bio updated successfully!';
+                    successBox.style.display = 'block';
+                }
+            } catch (err) {
+                errorBox.textContent = "Couldn't reach the server.";
+                errorBox.style.display = 'block';
+            }
+        });
+    </script>
+</body>

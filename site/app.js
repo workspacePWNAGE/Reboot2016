@@ -20,6 +20,8 @@ app.use(require('./modules/avatar'));
 app.use(require('./modules/auth'));
 app.use(require('./modules/users'));
 app.use(require('./modules/admin'));
+app.use(require('./modules/profile'));
+
 
 app.listen(PORT, () => {
     console.log(`running @ http://localhost:${PORT}`);

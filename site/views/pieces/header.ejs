@@ -6,41 +6,7 @@
 
     <% if (locals.user) { %>
         <span class="authStatus">Bux: <%= user.bux %></span>
-        <form method="post" action="/logout" style="display: inline;">
-            <button type="submit" id="logoutBtn" class="authStatus" data-label="<%= user.username %>"><%= user.username %></button>
-        </form>  
-
-        <script>
-            (function () {
-                const btn = document.getElementById('logoutBtn');
-                if (!btn) return;
-
-                const normalText = btn.dataset.label;
-                let confirming = false;
-
-                function reset() {
-                    confirming = false;
-                    btn.textContent = normalText;
-                }
-
-                function hint() {
-                    if (!confirming) btn.textContent = 'Logout?';
-                }
-
-                btn.addEventListener('mouseenter', hint);
-                btn.addEventListener('focus', hint);
-                btn.addEventListener('mouseleave', reset);
-                btn.addEventListener('blur', reset);
-
-                btn.addEventListener('click', (e) => {
-                    if (!confirming) {
-                        e.preventDefault();
-                        confirming = true;
-                        btn.textContent = 'Are you sure?';
-                    }
-                });
-            })();
-        </script>
+        <a class="authStatus" href="/profile?id=<%= user.id %>"><%= user.username %></a>
     <% } else if (locals.ban) { %>
         <form method="post" action="/logout" style="display: inline;">
             <button type="submit" class="authStatus">Logout</button>

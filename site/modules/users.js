@@ -27,6 +27,41 @@ router.get('/api/get-user-data', (req, res) => {
     });
 });
 
+router.post('/api/update-bio', (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({ error: "You must be logged in to update your bio!" });
+    }
+
+    let { bio } = req.body;
+
+    if (typeof bio !== 'string') {
+        return res.status(400).json({ error: "Bad bio format." });
+    }
+
+    bio = bio.trim();
+
+    if (bio.length > 200) {
+        return res.status(400).json({ error: "Bio cannot go past 200 characters!" });
+    }
+
+    const check = profanityFilter.check(bio);
+    if (check.profane) {
+        return res.status(400).json({ error: "Your bio contains inappropriate text..." });
+    }
+
+    const users = readUsers();
+    const userIndex = users.findIndex(u => u.id === req.user.id);
+
+    if (userIndex === -1) {
+        return res.status(404).json({ error: "User not found." });
+    }
+
+    users[userIndex].bio = bio;
+    saveUsers(users);
+
+    res.json({ message: "Bio updated successfully!" });
+});
+
 router.post('/api/update-avatar', (req, res) => {
     const { token, bodycolors } = req.body;
 
