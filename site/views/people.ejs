@@ -1,0 +1,59 @@
+<head>
+    <%- include('pieces/metadata') %>
+    <title>Reboot 16 | People</title>
+</head>
+
+<body>
+    <%- include('pieces/header') %>
+
+    <div class="content" style="text-align: center;">
+        <h1 class="authTitle">People</h1>
+
+        <form method="get" action="/people">
+            <input type="text" name="q" value="<%= q %>" placeholder="Username" maxlength="20" autocomplete="off">
+            <input type="submit" value="Search">
+            <% if (q) { %>
+                <a href="/people">Clear</a>
+            <% } %>
+        </form>
+        <br>
+        
+        <% if (totalPages > 1) { %>
+            <div class="peoplePages">
+                <% if (prevPage) { %><a href="<%= pageUrl(prevPage) %>"><</a><% } else { %><span><</span><% } %>
+
+                <% items.forEach(item => { %>
+                    <% if (item.ellipsis) { %>
+                        <span>...</span>
+                    <% } else if (item.current) { %>
+                        <strong><%= item.page %></strong>
+                    <% } else { %>
+                        <a href="<%= pageUrl(item.page) %>"><%= item.page %></a>
+                    <% } %>
+                <% }) %>
+
+                <% if (nextPage) { %><a href="<%= pageUrl(nextPage) %>">></a><% } else { %><span>></span><% } %>
+            </div>
+        <% } %>
+
+        <% if (total > 0) { %>
+            <p>Showing <%= from %>-<%= to %> of <%= total %></p>
+        <% } %>
+        <br>
+
+        <% if (people.length === 0) { %>
+            <p>No one found<%= q ? ` matching "${q}"` : '' %>.</p>
+        <% } else { %>
+            <div class="peopleContainer">
+                <% people.forEach(person => { %>
+                    <div class="personCard">
+                        <img src="/api/get-thumbnail/player?id=<%= person.id %>" onerror="this.onerror=null;this.src='/api/get-thumbnail/player?id=0'">
+                        <a><%= person.username %> | <%= person.id %></a>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+    </div>
+
+    <%- include('pieces/footer') %>
+</body>

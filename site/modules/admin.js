@@ -4,6 +4,7 @@ const path = require('path');
 const multer = require('multer');
 const { ROOT, ADMIN_KEYS } = require('./config');
 const { readUsers, saveUsers } = require('./database');
+const { banUser, unbanUser } = require('./bans');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -37,6 +38,7 @@ router.post('/api/admin/terminal', (req, res) => {
             return res.json({
                 output: `Available Commands:
 - ban <userid> <time hours/inf> <reason> : Bans a user.
+- unban <userid> : Lifts a user's ban.
 - upload : Instructs how to use the upload endpoint.
 - get-userid <username> : Returns the ID of a given username.
 - help : Prints this menu.`
@@ -66,20 +68,34 @@ router.post('/api/admin/terminal', (req, res) => {
             const userIndex = users.findIndex(u => u.id === targetId);
             if (userIndex === -1) return res.json({ output: `Error: User ID ${targetId} not found.` });
 
-            let banExpiration = null;
+            let hours = null;   // null = permanent
             if (timeParam.toLowerCase() !== 'inf') {
-                const hours = parseFloat(timeParam);
-                if (isNaN(hours)) return res.json({ output: "Error: Time must be a number of hours or 'inf'." });
-                banExpiration = Date.now() + (hours * 60 * 60 * 1000);
+                hours = parseFloat(timeParam);
+                if (!Number.isFinite(hours) || hours <= 0) return res.json({ output: "Error: Time must be a positive number of hours or 'inf'." });
             }
 
-            users[userIndex].banned = true;
-            users[userIndex].banReason = reason;
-            users[userIndex].banExpiration = banExpiration;
+            banUser(users, userIndex, hours, reason);
             saveUsers(users);
 
-            const durationText = banExpiration ? `${timeParam} hours` : "permanently";
+            const durationText = hours === null ? "permanently" : `${timeParam} hours`;
             return res.json({ output: `Success: User ${users[userIndex].username} (ID: ${targetId}) has been banned ${durationText} for: ${reason}` });
+        }
+
+        case 'unban': {
+            const targetId = parseInt(args[1], 10);
+
+            if (!targetId) {
+                return res.json({ output: "Error: Invalid syntax. Usage: unban <userid>" });
+            }
+
+            const userIndex = users.findIndex(u => u.id === targetId);
+            if (userIndex === -1) return res.json({ output: `Error: User ID ${targetId} not found.` });
+
+            const wasBanned = unbanUser(users, userIndex);
+            saveUsers(users);
+
+            if (!wasBanned) return res.json({ output: `User ${users[userIndex].username} (ID: ${targetId}) is not banned.` });
+            return res.json({ output: `Success: User ${users[userIndex].username} (ID: ${targetId}) has been unbanned.` });
         }
 
         case 'upload':

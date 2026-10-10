@@ -1,6 +1,7 @@
 const express = require('express');
 const { validColorIds } = require('./config');
 const { readUsers, saveUsers } = require('./database');
+const { isBanned, checkBan } = require('./bans');
 
 const router = express.Router();
 
@@ -21,7 +22,8 @@ router.get('/api/get-user-data', (req, res) => {
     res.json({
         id: user.id,
         username: user.username,
-        avatar: user.avatar
+        avatar: user.avatar,
+        banned: isBanned(user)
     });
 });
 
@@ -42,6 +44,9 @@ router.post('/api/update-avatar', (req, res) => {
     if (userIndex === -1) {
         return res.status(401).json({ error: "Invalid or expired session token..." });
     }
+
+    const ban = checkBan(users, userIndex);
+    if (ban) return res.status(ban.status).json(ban.body);
 
     const validParts = ['head', 'torso', 'left_arm', 'right_arm', 'left_leg', 'right_leg'];
     let hasChanges = false;

@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { readUsers, saveUsers } = require('./database');
 const { authLimiter } = require('./rateLimiter');
+const { checkBan } = require('./bans');
 
 const router = express.Router();
 
@@ -31,6 +32,7 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
         id: newId,
         username: username,
         password: hashedPassword,
+        banned: false,
         avatar: {
             hat1: 0,
             hat2: 0,
@@ -55,6 +57,9 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
     if (token) {
         const userIndex = users.findIndex(u => u.token === token);
         if (userIndex !== -1) {
+            const ban = checkBan(users, userIndex);
+            if (ban) return res.status(ban.status).json(ban.body);
+
             const { password: _, ...userData } = users[userIndex];
             return res.json({
                 message: "Login successful via token!",
@@ -81,6 +86,9 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
     if (!passwordMatch) {
         return res.status(401).json({ error: "Bad username or password." });
     }
+
+    const ban = checkBan(users, userIndex);
+    if (ban) return res.status(ban.status).json(ban.body);
 
     const sessionToken = crypto.randomBytes(32).toString('hex');
 

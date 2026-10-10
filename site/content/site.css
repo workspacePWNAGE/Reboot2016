@@ -5,7 +5,7 @@
 
 @font-face {
     font-family: segoe;
-    src: url(segoe.ttf);
+    src: url(/fonts/segoe.ttf);
 }
 
 body {
@@ -354,4 +354,30 @@ body {
     display: block;
     min-height: 22px;
     margin-top: 8px;
+}
+
+.content .peopleContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    text-align: center;
+}
+
+.content .personCard {
+    display: block;
+    width: 150px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.156);
+    flex-shrink: 0;
+}
+
+.content .personCard img { 
+    margin: 0px auto;
+    width: 100%;
+}
+
+.content .personCard a {
+    color: rgb(255, 127, 253);
+    text-decoration: none;
 }
