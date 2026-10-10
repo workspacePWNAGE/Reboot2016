@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { readUsers, saveUsers } = require('./database');
 const { authLimiter } = require('./rateLimiter');
 const { checkBan } = require('./bans');
+const { isReservedUsername } = require('./usernames');
 
 const router = express.Router();
 
@@ -17,6 +18,10 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
     if (!usernameRegex.test(username)) {
         return res.status(400).json({ error: "Username needs to be 3-20 characters long and can only contain letters, numbers, and underscores." });
+    }
+
+    if (isReservedUsername(username)) {
+        return res.status(400).json({ error: "That username is reserved." });
     }
 
     const users = readUsers();

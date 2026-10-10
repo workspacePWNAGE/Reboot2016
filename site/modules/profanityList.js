@@ -18,6 +18,11 @@ module.exports = [
     ['coon', 3],
     ['kys', 3],
     ['kill yourself', 3],
+    ['porn', 3, 's'],
+    ['pron', 3, 's'],
+    ['rule34', 3, 's'],
+    ['r34', 3, 's'],
+    ['xxx', 3, 's'],
 
     ['shit', 2, 's'],
     ['shit', 2, 'v'],

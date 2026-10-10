@@ -5,6 +5,7 @@ const multer = require('multer');
 const { ROOT, ADMIN_KEYS } = require('./config');
 const { readUsers, saveUsers } = require('./database');
 const { banUser, unbanUser } = require('./bans');
+const { resetUsername } = require('./usernames');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -39,6 +40,7 @@ router.post('/api/admin/terminal', (req, res) => {
                 output: `Available Commands:
 - ban <userid> <time hours/inf> <reason> : Bans a user.
 - unban <userid> : Lifts a user's ban.
+- reset-username <userid> : Resets a user's username to player_<userid>.
 - upload : Instructs how to use the upload endpoint.
 - get-userid <username> : Returns the ID of a given username.
 - help : Prints this menu.`
@@ -75,10 +77,15 @@ router.post('/api/admin/terminal', (req, res) => {
             }
 
             banUser(users, userIndex, hours, reason);
+            const bannedName = users[userIndex].username;
+            const reset = resetUsername(users, userIndex);   // banned users lose their username
             saveUsers(users);
 
             const durationText = hours === null ? "permanently" : `${timeParam} hours`;
-            return res.json({ output: `Success: User ${users[userIndex].username} (ID: ${targetId}) has been banned ${durationText} for: ${reason}` });
+            let output = `Success: User ${bannedName} (ID: ${targetId}) has been banned ${durationText} for: ${reason}`;
+            if (reset.changed) output += `\nTheir username was reset to ${reset.newName}.`;
+            else if (reset.conflict) output += `\nWarning: couldn't reset their username, another account already uses ${reset.newName}.`;
+            return res.json({ output });
         }
 
         case 'unban': {
@@ -96,6 +103,25 @@ router.post('/api/admin/terminal', (req, res) => {
 
             if (!wasBanned) return res.json({ output: `User ${users[userIndex].username} (ID: ${targetId}) is not banned.` });
             return res.json({ output: `Success: User ${users[userIndex].username} (ID: ${targetId}) has been unbanned.` });
+        }
+
+        case 'reset-username': {
+            const targetId = parseInt(args[1], 10);
+
+            if (!targetId) {
+                return res.json({ output: "Error: Invalid syntax. Usage: reset-username <userid>" });
+            }
+
+            const userIndex = users.findIndex(u => u.id === targetId);
+            if (userIndex === -1) return res.json({ output: `Error: User ID ${targetId} not found.` });
+
+            const reset = resetUsername(users, userIndex);
+
+            if (reset.conflict) return res.json({ output: `Error: Another account already uses the username ${reset.newName}.` });
+            if (!reset.changed) return res.json({ output: `User ID ${targetId} already has the username ${reset.newName}.` });
+
+            saveUsers(users);
+            return res.json({ output: `Success: Username of ID ${targetId} reset from ${reset.oldName} to ${reset.newName}.` });
         }
 
         case 'upload':
