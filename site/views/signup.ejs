@@ -11,7 +11,7 @@
     <div class="content">
         <h1 class="authTitle">Sign Up</h1>
         <br><br>
-        <form id="signupForm" class="authForm" method="POST" action="javascript:void(0);">
+        <form id="loginForm" class="authForm">
             <h2 id="authError" class="authError" style="color: #c00; display: none;"></h2>
             
             <h1>Username</h1>
@@ -34,56 +34,66 @@
 
     <%- include('pieces/footer') %>
 
-    <script>
-        const form = document.getElementById('signupForm');
-        const errorBox = document.getElementById('authError');
-        const submitBtn = document.getElementById('signupSubmit');
+    <script nonce="<%= nonce %>">
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('loginForm');
+            const errorBox = document.getElementById('authError');
+            const submitBtn = document.getElementById('loginSubmit');
 
-        function showError(message) {
-            errorBox.textContent = message;
-            errorBox.style.display = 'block';
-        }
+            if (!form) return;
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorBox.style.display = 'none';
-
-            const username = form.username.value.trim();
-            const password = form.password.value;
-            const confirm = form.confirm.value;
-
-            if (password !== confirm) {
-                return showError("Your passwords don't match!");
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.value = 'Signing up...';
-
-            try {
-                const formData = new FormData(form);
-                const turnstileResponse = formData.get('cf-turnstile-response');
-
-                const res = await fetch('/api/register-user', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, token: turnstileResponse })
-                });
-
-                let data = {};
-                try { data = await res.json(); } catch (_) {}
-
-                if (!res.ok) {
-                    showError(data.error || 'Something went wrong. Please try again.');
-                } else {
-                    window.location.href = '/login';
-                    return;
+            function showError(message) {
+                if (errorBox) {
+                    errorBox.textContent = message;
+                    errorBox.style.display = 'block';
                 }
-            } catch (err) {
-                showError("Couldn't reach the server. Please try again.");
             }
 
-            submitBtn.disabled = false;
-            submitBtn.value = 'Sign Up';
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault(); // This stops the browser from navigating or doing a GET request
+                if (errorBox) errorBox.style.display = 'none';
+
+                const username = form.username.value.trim();
+                const password = form.password.value;
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.value = 'Logging in...';
+                }
+
+                try {
+                    const formData = new FormData(form);
+                    const turnstileResponse = formData.get('cf-turnstile-response');
+
+                    const res = await fetch('/api/login-user', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password, token: turnstileResponse })
+                    });
+
+                    let data = {};
+                    try { data = await res.json(); } catch (_) {}
+
+                    if (res.ok) {
+                        window.location.href = '/';
+                        return;
+                    }
+
+                    if (data.banned && data.redirect) {
+                        window.location.href = data.redirect;
+                        return;
+                    }
+
+                    showError(data.error || 'Something went wrong. Please try again.');
+                } catch (err) {
+                    showError("Couldn't reach the server. Please try again.");
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.value = 'Login';
+                }
+            });
         });
     </script>
 </body>
