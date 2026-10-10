@@ -23,6 +23,8 @@ module.exports = [
     ['rule34', 3, 's'],
     ['r34', 3, 's'],
     ['xxx', 3, 's'],
+    ['sex', 3, 's'],
+    ['sexual', 3, 's'],
 
     ['shit', 2, 's'],
     ['shit', 2, 'v'],
