@@ -49,8 +49,8 @@
             submitBtn.value = 'Logging in...';
 
             try {
-                const turnstileResponse = formData.get('cf-turnstile-response');
                 const formData = new FormData(form);
+                const turnstileResponse = formData.get('cf-turnstile-response');
 
                 const res = await fetch('/api/login-user', {
                     method: 'POST',
