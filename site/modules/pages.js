@@ -1,6 +1,7 @@
 const express = require('express');
 const { VIEWS_DIR } = require('./config');
 const { getPeoplePageData } = require('./people');
+const { readUsers } = require('./database');
 
 const PAGES = [
     { route: '/', view: 'index' },
