@@ -12,6 +12,32 @@ app.use(express.json());
 app.use(cookieParser());
 app.set('trust proxy', true);
 
+app.use((req, res, next) => {
+    const nonce = crypto.randomBytes(16).toString('base64');
+
+    res.locals.nonce = nonce;
+
+    res.setHeader(
+        'Content-Security-Policy',
+        `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com;`
+    );
+
+    const originalSend = res.send;
+
+    res.send = function (body) {
+        if (typeof body === 'string' && body.includes('<script')) {
+            body = body.replace(
+                /<script\b(?![^>]*\bnonce\s*=)/gi,
+                `<script nonce="${nonce}"`
+            );
+        }
+
+        return originalSend.call(this, body);
+    };
+
+    next();
+});
+
 app.use(require('./modules/assets'));
 const session = require('./modules/session');
 app.use(session.middleware);
