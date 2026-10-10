@@ -42,6 +42,23 @@ body {
     float: left;
 }
 
+.header button {
+    color: white;
+    font-size: 22px;
+    text-decoration: none;
+    height: 50px;
+    line-height: 50px;
+    padding: 0 7px;
+    float: left;
+    background-color: #00000000;
+    border: none;
+    cursor: pointer;
+}
+
+.header button:hover {
+    background-image: linear-gradient(rgba(100, 100, 100, 0.121), rgba(204, 204, 204, 0.121));
+}
+
 .header .authStatus {
     color: white;
     font-size: 22px;

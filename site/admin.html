@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Terminal</title>
     <style>
         body, html {
             margin: 0;
@@ -54,23 +55,28 @@
     <div id="terminal-container">
         <div id="output"></div>
         <div id="input-line">
-            <span id="prompt-symbol">Key 1:</span>
-            <input type="password" id="cli" autocomplete="off" autofocus>
+            <span id="prompt-symbol">admin@server:~$</span>
+            <input type="text" id="cli" autocomplete="off" autofocus>
         </div>
     </div>
 
     <input type="file" id="hidden-file-input" style="display: none;">
 
     <script>
+        // Access is based on your website login (staff roles only), so there is nothing to type in to authenticate.
+
         const outputDiv = document.getElementById('output');
         const cliInput = document.getElementById('cli');
         const promptSymbol = document.getElementById('prompt-symbol');
         const terminalContainer = document.getElementById('terminal-container');
         const fileInput = document.getElementById('hidden-file-input');
 
-        let state = 'LOGIN_1';
-        let keys = { key1: '', key2: '', key3: '' };
+        let state = 'READY';          // READY | UPLOAD_TYPE | BUSY
+        let promptText = 'admin@server:~$';
         let pendingUploadType = '';
+
+        const history = [];
+        let historyIndex = 0;
 
         function printLine(text, className = '') {
             const span = document.createElement('span');
@@ -80,22 +86,49 @@
             terminalContainer.scrollTop = terminalContainer.scrollHeight;
         }
 
+        // Sends a terminal line to the server. Always resolves to { ok, text } (never throws).
+        async function sendCommand(command) {
+            try {
+                const res = await fetch('/api/admin/terminal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command })
+                });
+
+                let data = {};
+                try { data = await res.json(); } catch (_) {}
+
+                if (data.error) {
+                    if (res.status === 401) return { ok: false, text: data.error + ' Your session may have expired, log in again.' };
+                    return { ok: false, text: data.error };
+                }
+                if (data.output !== undefined) return { ok: true, text: data.output };
+                return { ok: res.ok, text: res.ok ? JSON.stringify(data) : `Request failed (${res.status}).` };
+            } catch (err) {
+                return { ok: false, text: 'Command failed: Network error.' };
+            }
+        }
+
+        function resetPrompt() {
+            state = 'READY';
+            promptSymbol.innerText = promptText;
+            cliInput.style.display = 'block';
+            cliInput.focus();
+        }
+
         document.addEventListener('click', () => cliInput.focus());
 
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) {
-                printLine("Upload cancelled.", "system");
+                printLine('Upload cancelled.', 'system');
                 resetPrompt();
                 return;
             }
 
-            printLine(`Uploading ${file.name}...`, "system");
+            printLine(`Uploading ${file.name}...`, 'system');
 
             const formData = new FormData();
-            formData.append('key1', keys.key1);
-            formData.append('key2', keys.key2);
-            formData.append('key3', keys.key3);
             formData.append('type', pendingUploadType);
             formData.append('file', file);
 
@@ -104,12 +137,15 @@
                     method: 'POST',
                     body: formData
                 });
-                const data = await res.json();
-                
-                if (data.error) printLine(data.error, "error");
-                else printLine(data.message, "success");
+
+                let data = {};
+                try { data = await res.json(); } catch (_) {}
+
+                if (data.error) printLine(data.error, 'error');
+                else if (data.message) printLine(data.message, 'success');
+                else printLine(`Upload failed (${res.status}).`, 'error');
             } catch (err) {
-                printLine("Upload failed: Network error.", "error");
+                printLine('Upload failed: Network error.', 'error');
             }
 
             fileInput.value = '';
@@ -118,46 +154,32 @@
         });
 
         cliInput.addEventListener('keydown', async (e) => {
-            if (e.key !== 'Enter') return;
-            
-            const inputVal = cliInput.value.trim();
-            cliInput.value = ''; 
+            // command history
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                if (state !== 'READY' || history.length === 0) return;
+                e.preventDefault();
+                historyIndex += e.key === 'ArrowUp' ? -1 : 1;
+                historyIndex = Math.max(0, Math.min(history.length, historyIndex));
+                cliInput.value = history[historyIndex] || '';
+                return;
+            }
 
-            if (state === 'LOGIN_1') {
-                keys.key1 = inputVal;
-                printLine("Key 1 >>");
-                promptSymbol.innerText = "Key 2:";
-                state = 'LOGIN_2';
-                return;
-            }
-            if (state === 'LOGIN_2') {
-                keys.key2 = inputVal;
-                printLine("Key 2 >>");
-                promptSymbol.innerText = "Key 3:";
-                state = 'LOGIN_3';
-                return;
-            }
-            if (state === 'LOGIN_3') {
-                keys.key3 = inputVal;
-                printLine("Key 3 >>");
-                
-                cliInput.type = "text"; 
-                printLine("\nAuthentication complete.", "system");
-                resetPrompt();
-                return;
-            }
+            if (e.key !== 'Enter' || state === 'BUSY') return;
+
+            const inputVal = cliInput.value.trim();
+            cliInput.value = '';
 
             if (state === 'UPLOAD_TYPE') {
                 printLine(`Upload Type: ${inputVal}`);
                 const type = inputVal.toLowerCase();
-                
+
                 if (['texture', 'sound', 'place'].includes(type)) {
                     pendingUploadType = type;
-                    fileInput.click(); 
-                    promptSymbol.innerText = "";
-                    cliInput.style.display = "none";
+                    fileInput.click();
+                    promptSymbol.innerText = '';
+                    cliInput.style.display = 'none';
                 } else {
-                    printLine("Invalid type. Allowed: texture, sound, place.", "error");
+                    printLine('Invalid type. Allowed: texture, sound, place.', 'error');
                     resetPrompt();
                 }
                 return;
@@ -165,46 +187,52 @@
 
             if (state === 'READY') {
                 if (!inputVal) {
-                    printLine("admin@server:~$ ");
+                    printLine(promptText + ' ');
                     return;
                 }
-                
-                printLine(`admin@server:~$ ${inputVal}`);
-                const args = inputVal.split(/\s+/);
-                const cmd = args[0].toLowerCase();
 
-                if (cmd === 'upload') {
+                printLine(`${promptText} ${inputVal}`);
+                history.push(inputVal);
+                historyIndex = history.length;
+
+                const cmd = inputVal.split(/\s+/)[0].toLowerCase();
+
+                if (cmd === 'clear') {
+                    outputDiv.innerHTML = '';
+                    return;
+                }
+
+                state = 'BUSY';
+                const result = await sendCommand(inputVal);
+
+                if (cmd === 'upload' && result.ok && !/permission/i.test(result.text)) {
+                    // the server confirmed this account may upload: pick the type and file here in the browser
                     state = 'UPLOAD_TYPE';
-                    promptSymbol.innerText = "Asset type (texture/sound/place): ";
+                    promptSymbol.innerText = 'Asset type (texture/sound/place): ';
                     return;
                 }
 
-                try {
-                    const res = await fetch('/api/admin/terminal', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ...keys, command: inputVal })
-                    });
-                    const data = await res.json();
-                    
-                    if (data.error) printLine(data.error, "error");
-                    else if (data.output) printLine(data.output);
-                    else printLine(JSON.stringify(data), "system");
-                    
-                } catch (err) {
-                    printLine("Command failed: Network error.", "error");
-                }
-                
-                terminalContainer.scrollTop = terminalContainer.scrollHeight;
+                printLine(result.text, result.ok ? '' : 'error');
+                resetPrompt();
             }
         });
 
-        function resetPrompt() {
-            state = 'READY';
-            promptSymbol.innerText = "admin@server:~$";
-            cliInput.style.display = "block";
-            cliInput.focus();
-        }
+        // On load: find out who we are
+        (async () => {
+            state = 'BUSY';
+            const who = await sendCommand('whoami');
+
+            if (who.ok) {
+                const match = who.text.match(/^Logged in as (\S+)/);
+                if (match) promptText = `${match[1]}@server:~$`;
+                printLine(who.text, 'system');
+                printLine("Type 'help' for the commands you can use.\n", 'system');
+            } else {
+                printLine(who.text, 'error');
+            }
+
+            resetPrompt();
+        })();
     </script>
 </body>
 </html>

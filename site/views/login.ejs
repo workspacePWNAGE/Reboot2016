@@ -1,0 +1,78 @@
+<head>
+    <%- include('pieces/metadata') %>
+    <title>Reboot 16 | Login</title>
+</head>
+
+<body>
+    <%- include('pieces/header') %>
+
+    <div class="content">
+        <h1 class="authTitle">Login</h1>
+        <br><br>
+        <form id="loginForm" class="authForm">
+            <h2 id="authError" class="authError" style="color: #c00; display: none;"></h2>
+            
+            <h1>Username</h1>
+            <input type="text" name="username" placeholder="Username" autocomplete="username" maxlength="64" required> <br><br>
+
+            <h1>Password</h1>
+            <input type="password" name="password" placeholder="Password" autocomplete="current-password" maxlength="128" required> <br><br>
+                
+            <input type="submit" id="loginSubmit" value="Login" style="padding: 5px 30px;">
+        </form>
+    </div>
+
+    <%- include('pieces/footer') %>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const errorBox = document.getElementById('authError');
+        const submitBtn = document.getElementById('loginSubmit');
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.style.display = 'block';
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+
+            const username = form.username.value.trim();
+            const password = form.password.value;
+
+            submitBtn.disabled = true;
+            submitBtn.value = 'Logging in...';
+
+            try {
+                const res = await fetch('/api/login-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                let data = {};
+                try { data = await res.json(); } catch (_) {}
+
+                if (res.ok) {
+                    // the server has set the login cookie
+                    window.location.href = '/';
+                    return;
+                }
+
+                if (data.banned && data.redirect) {
+                    // banned account -> moderated page
+                    window.location.href = data.redirect;
+                    return;
+                }
+
+                showError(data.error || 'Something went wrong. Please try again.');
+            } catch (err) {
+                showError("Couldn't reach the server. Please try again.");
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.value = 'Login';
+        });
+    </script>
+</body>

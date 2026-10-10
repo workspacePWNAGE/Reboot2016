@@ -5,6 +5,7 @@ const { readUsers, saveUsers } = require('./database');
 const { authLimiter } = require('./rateLimiter');
 const { checkBan } = require('./bans');
 const { isReservedUsername } = require('./usernames');
+const { setSessionCookie } = require('./session');
 
 const router = express.Router();
 
@@ -38,6 +39,7 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
         username: username,
         password: hashedPassword,
         banned: false,
+        role: 'user',
         avatar: {
             hat1: 0,
             hat2: 0,
@@ -93,12 +95,21 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
     }
 
     const ban = checkBan(users, userIndex);
-    if (ban) return res.status(ban.status).json(ban.body);
+    if (ban) {
+        if (!users[userIndex].token) {
+            users[userIndex].token = crypto.randomBytes(32).toString('hex');
+            saveUsers(users);
+        }
+        setSessionCookie(req, res, users[userIndex].token);
+        return res.status(ban.status).json(ban.body);
+    }
 
     const sessionToken = crypto.randomBytes(32).toString('hex');
 
     users[userIndex].token = sessionToken;
     saveUsers(users);
+
+    setSessionCookie(req, res, sessionToken);
 
     const { password: _, ...userData } = users[userIndex];
 

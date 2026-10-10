@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>testaroo</title>
+<style>
+    :root { --bg:#1e1e1e; --panel:#252526; --line:#3c3c3c; --text:#d4d4d4; --dim:#808080; --accent:#0e639c; --err:#f44747; --ok:#4caf50; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:14px Consolas,'Courier New',monospace; }
+    .layout { display:grid; grid-template-columns:340px 1fr; min-height:100vh; }
+    aside { background:var(--panel); border-right:1px solid var(--line); padding:14px; overflow-y:auto; }
+    main { padding:14px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+    h1 { font-size:15px; margin:0 0 10px; }
+    fieldset { border:1px solid var(--line); margin:0 0 12px; padding:8px 10px 10px; }
+    legend { color:var(--dim); padding:0 4px; }
+    label { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0; }
+    input, select, button { font:inherit; color:var(--text); background:#1e1e1e; border:1px solid var(--line); padding:4px 6px; }
+    input[type=color] { padding:0; width:48px; height:24px; background:none; cursor:pointer; }
+    input[type=range] { padding:0; flex:1; }
+    input[type=number] { width:70px; }
+    input[type=text], input[type=password], select { flex:1; min-width:0; }
+    button { cursor:pointer; }
+    button:hover { border-color:var(--accent); }
+    button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    button:disabled { opacity:.5; cursor:default; }
+    .row { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+    .inline { display:flex; gap:12px; align-items:center; margin:6px 0; }
+    .inline label { margin:0; }
+    #stage { flex:1; min-height:300px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; overflow:auto; padding:10px;
+             background-color:#fff;
+             background-image:conic-gradient(#ccc 25%, #fff 0 50%, #ccc 0 75%, #fff 0); background-size:20px 20px; }
+    #stage.bg-white  { background:#fff; }
+    #stage.bg-gray   { background:#808080; }
+    #stage.bg-black  { background:#000; }
+    #preview { max-width:100%; display:none; }
+    #placeholder { color:var(--dim); background:rgba(30,30,30,.85); padding:6px 10px; }
+    .bar { display:flex; gap:14px; flex-wrap:wrap; color:var(--dim); }
+    #status.ok { color:var(--ok); } #status.err { color:var(--err); white-space:pre-wrap; }
+    #health.down { color:var(--err); }
+    code { color:var(--text); word-break:break-all; }
+    .note { color:var(--dim); font-size:12px; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside>
+    <h1>Avatar Renderer</h1>
+
+    <fieldset>
+        <legend>Server</legend>
+        <label>API key <input type="password" id="key" placeholder="(none)" autocomplete="off"></label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Output</legend>
+        <label>Size
+            <input type="range" id="sizeRange" min="16" max="1024" step="1" value="512">
+            <input type="number" id="size" min="16" max="1024" value="512">
+        </label>
+        <div class="inline">
+            Quality
+            <label><input type="radio" name="quality" value="hq" checked> hq</label>
+            <label><input type="radio" name="quality" value="lq"> lq</label>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Textures <button type="button" id="reloadTex" title="Reload the list from the server">↻</button></legend>
+        <label>Face  <select id="face"></select></label>
+        <label>Shirt <select id="shirt"></select></label>
+        <label>Pants <select id="pants"></select></label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Body colours</legend>
+        <div id="colors"></div>
+        <div class="row">
+            <button type="button" id="preClassic">Classic</button>
+            <button type="button" id="preRandom">Random</button>
+            <button type="button" id="preHead">Head → all</button>
+            <button type="button" id="preReset">Reset</button>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Request</legend>
+        <div class="inline">
+            <label><input type="radio" name="mode" value="sync" checked> wait (POST /render)</label>
+        </div>
+        <div class="inline">
+            <label><input type="radio" name="mode" value="job"> job (POST /jobs + poll)</label>
+        </div>
+        <label><span><input type="checkbox" id="auto" checked> Re-render when something changes</span></label>
+        <div class="row">
+            <button type="button" id="render" class="primary">Render</button>
+            <button type="button" id="download" disabled>Download PNG</button>
+        </div>
+    </fieldset>
+</aside>
+
+<main>
+    <div class="bar">
+        <span id="status">Idle</span>
+        <span id="info"></span>
+    </div>
+    <div class="bar"><span id="health">Server: checking…</span></div>
+
+    <div id="stage">
+        <img id="preview" alt="rendered avatar">
+        <span id="placeholder">Nothing rendered yet</span>
+    </div>
+
+    <div class="row" style="margin:0">
+        Background:
+        <button type="button" data-bg="">checker</button>
+        <button type="button" data-bg="bg-white">white</button>
+        <button type="button" data-bg="bg-gray">gray</button>
+        <button type="button" data-bg="bg-black">black</button>
+    </div>
+
+    <div>
+        <div class="note">Request body (also works as a query string on GET /render):</div>
+        <code id="query"></code>
+        <button type="button" id="copyQuery">Copy</button>
+    </div>
+</main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+const PARTS = [['head','Head'], ['torso','Torso'], ['larm','Left arm'], ['rarm','Right arm'], ['lleg','Left leg'], ['rleg','Right leg']];
+const CLASSIC = { head:'#F5CD30', torso:'#0D69AC', larm:'#F5CD30', rarm:'#F5CD30', lleg:'#4B974B', rleg:'#4B974B' };
+const GRAY = '#7F7F7F';          // the server's default body colour
+
+let maxSize = 1024;
+let busy = false;                // one request from this page at a time, so the server queue never floods
+let dirty = false;               // something changed while a render was running
+let debounce = null;
+let currentPng = '';
+
+const API_BASE = 'http://localhost:4417';
+
+// ---------- controls ----------
+for (const [key, label] of PARTS) {
+    const row = document.createElement('label');
+    row.innerHTML = `${label} <input type="color" id="c_${key}" value="${GRAY}">`;
+    $('colors').appendChild(row);
+}
+const colorEl = (k) => $('c_' + k);
+const setColors = (map) => { for (const [k] of PARTS) colorEl(k).value = (map[k] || GRAY).toLowerCase(); schedule(); };
+
+$('preClassic').onclick = () => setColors(CLASSIC);
+$('preReset').onclick   = () => setColors({});
+$('preHead').onclick    = () => setColors(Object.fromEntries(PARTS.map(([k]) => [k, colorEl('head').value])));
+$('preRandom').onclick  = () => setColors(Object.fromEntries(PARTS.map(([k]) => [k, '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0')])));
+
+$('sizeRange').oninput = () => { $('size').value = $('sizeRange').value; };
+$('size').oninput      = () => { $('sizeRange').value = $('size').value; };
+
+document.querySelectorAll('[data-bg]').forEach(b => b.onclick = () => { $('stage').className = b.dataset.bg; });
+
+const savedKey = localStorage.getItem('rendererKey');
+if (savedKey) $('key').value = savedKey;
+$('key').onchange = () => { localStorage.setItem('rendererKey', $('key').value); loadTextures(); schedule(); };
+
+$('render').onclick = () => render();
+$('reloadTex').onclick = () => loadTextures();
+$('copyQuery').onclick = () => navigator.clipboard && navigator.clipboard.writeText($('query').textContent);
+$('download').onclick = () => {
+    const a = document.createElement('a');
+    a.href = currentPng;
+    a.download = `avatar_${$('size').value}.png`;
+    a.click();
+};
+
+// anything that changes the request re-renders (debounced)
+document.querySelector('aside').addEventListener('input', () => { updateQuery(); schedule(); });
+document.querySelector('aside').addEventListener('change', () => { updateQuery(); });
+
+function schedule() {
+    updateQuery();
+    if (!$('auto').checked) return;
+    clearTimeout(debounce);
+    debounce = setTimeout(render, 350);
+}
+
+// ---------- request ----------
+function buildParams() {
+    const p = new URLSearchParams();
+    const size = Math.max(16, Math.min(maxSize, parseInt($('size').value, 10) || 512));
+    p.set('size', size);
+    p.set('quality', document.querySelector('input[name=quality]:checked').value);
+    for (const key of ['face', 'shirt', 'pants']) if ($(key).value !== '') p.set(key, $(key).value);
+    for (const [k] of PARTS) p.set(k, colorEl(k).value.replace('#', ''));
+    return p;
+}
+function updateQuery() { $('query').textContent = buildParams().toString(); }
+
+function api(path, opts = {}) {
+    const headers = { ...(opts.headers || {}) };
+    if ($('key').value) headers['X-Api-Key'] = $('key').value;
+    return fetch(API_BASE + path, { ...opts, headers });
+}
+
+async function errorOf(res) {
+    let msg = `HTTP ${res.status}`;
+    try { const d = await res.json(); if (d.error) msg = d.error; } catch (_) {}
+    return new Error(msg);
+}
+
+async function pollJob(id) {
+    for (;;) {
+        const res = await api('/jobs/' + id);
+        if (!res.ok) throw await errorOf(res);
+        const d = await res.json();
+        if (d.status === 'done') return d.image;
+        if (d.status === 'failed') throw new Error(d.error || 'render failed');
+        setStatus(d.status === 'queued' ? `Queued (position ${d.position})…` : 'Rendering…');
+        await sleep(250);
+    }
+}
+
+async function render() {
+    if (busy) { dirty = true; return; }
+    busy = true; dirty = false;
+    $('render').disabled = true;
+    setStatus('Rendering…');
+
+    const t0 = performance.now();
+    const body = buildParams().toString();
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    const mode = document.querySelector('input[name=mode]:checked').value;
+
+    try {
+        let b64;
+        if (mode === 'sync') {
+            const res = await api('/render', { method: 'POST', headers, body });
+            if (res.status === 200) b64 = await res.text();
+            else if (res.status === 202) b64 = await pollJob((await res.json()).jobId);   // took too long, server switched to a job
+            else throw await errorOf(res);
+        } else {
+            const res = await api('/jobs', { method: 'POST', headers, body });
+            if (!res.ok) throw await errorOf(res);
+            b64 = await pollJob((await res.json()).jobId);
+        }
+
+        currentPng = 'data:image/png;base64,' + b64.trim();
+        const img = $('preview');
+        img.onload = () => { $('info').textContent = `${img.naturalWidth}×${img.naturalHeight}px · ${(b64.length / 1024).toFixed(1)} KB base64`; };
+        img.src = currentPng;
+        img.style.display = 'block';
+        $('placeholder').style.display = 'none';
+        $('download').disabled = false;
+        setStatus(`Done in ${Math.round(performance.now() - t0)} ms`, 'ok');
+    } catch (err) {
+        setStatus(err.message || String(err), 'err');
+    }
+
+    busy = false;
+    $('render').disabled = false;
+    if (dirty) render();
+}
+
+function setStatus(text, cls = '') {
+    $('status').textContent = text;
+    $('status').className = cls;
+}
+
+// ---------- textures + health ----------
+function fillSelect(sel, files) {
+    const old = sel.value;
+    sel.innerHTML = '';
+    for (const [value, label] of [['', '(default)'], ['none', 'none'], ...files.map(f => [f, f])]) {
+        const o = document.createElement('option');
+        o.value = value; o.textContent = label;
+        sel.appendChild(o);
+    }
+    if ([...sel.options].some(o => o.value === old)) sel.value = old;
+}
+
+async function loadTextures() {
+    try {
+        const res = await api('/textures');
+        if (!res.ok) throw await errorOf(res);
+        const { files } = await res.json();
+        for (const id of ['face', 'shirt', 'pants']) fillSelect($(id), files);
+    } catch (err) {
+        for (const id of ['face', 'shirt', 'pants']) fillSelect($(id), []);
+        setStatus(`Couldn't load textures: ${err.message}`, 'err');
+    }
+}
+
+async function pollHealth() {
+    try {
+        const res = await fetch(API_BASE + '/health');
+        const h = await res.json();
+        if (h.maxSize) {
+            maxSize = h.maxSize;
+            $('size').max = $('sizeRange').max = maxSize;
+        }
+        $('health').className = '';
+        $('health').textContent = `Server: ${h.status} · queue ${h.pending}/${h.maxQueue} · ${h.completed} completed · ${h.failed} failed`;
+    } catch (_) {
+        $('health').className = 'down';
+        $('health').textContent = 'Server: unreachable';
+    }
+}
+
+(async () => {
+    updateQuery();
+    await pollHealth();
+    await loadTextures();
+    setInterval(pollHealth, 2000);
+    if ($('auto').checked) render();
+})();
+</script>
+</body>
+</html>

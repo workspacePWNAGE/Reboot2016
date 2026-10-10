@@ -2,145 +2,45 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const { ROOT, ADMIN_KEYS } = require('./config');
-const { readUsers, saveUsers } = require('./database');
-const { banUser, unbanUser } = require('./bans');
-const { resetUsername } = require('./usernames');
+const { ROOT } = require('./config');
+const { requireRole } = require('./session');
+const { roleAtLeast } = require('./roles');
+const { runCommand } = require('./adminCommands');
+const adminLog = require('./adminLog');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-function keysValid({ key1, key2, key3 }) {
-    return key1 === ADMIN_KEYS.key1 && key2 === ADMIN_KEYS.key2 && key3 === ADMIN_KEYS.key3;
-}
-
 router.get('/admin/terminal', (req, res) => {
+    if (!req.user || !roleAtLeast(req.user, 'moderator')) return res.sendStatus(404);
     res.sendFile(path.join(ROOT, 'admin.html'));
 });
 
-router.post('/api/admin/terminal', (req, res) => {
-    const { command } = req.body;
-
-    if (!keysValid(req.body)) {
-        return res.status(403).json({ error: "Bad keys!" });
-    }
-
-    if (!command) {
-        return res.status(400).json({ error: "No command given." });
-    }
-
-    const args = command.trim().split(/\s+/);
-    const cmd = args[0].toLowerCase();
-
-    const users = readUsers();
-
-    switch (cmd) {
-        case 'help':
-            return res.json({
-                output: `Available Commands:
-- ban <userid> <time hours/inf> <reason> : Bans a user.
-- unban <userid> : Lifts a user's ban.
-- reset-username <userid> : Resets a user's username to player_<userid>.
-- upload : Instructs how to use the upload endpoint.
-- get-userid <username> : Returns the ID of a given username.
-- help : Prints this menu.`
-            });
-
-        case 'get-userid': {
-            const targetUser = args[1];
-            if (!targetUser) return res.json({ output: "Error: Missing username. Usage: get-userid <username>" });
-
-            const foundUser = users.find(u => u.username.toLowerCase() === targetUser.toLowerCase());
-            if (foundUser) {
-                return res.json({ output: `User ${foundUser.username} has ID: ${foundUser.id}` });
-            } else {
-                return res.json({ output: `Error: User '${targetUser}' not found.` });
-            }
-        }
-
-        case 'ban': {
-            const targetId = parseInt(args[1], 10);
-            const timeParam = args[2];
-            const reason = args.slice(3).join(' ');
-
-            if (!targetId || !timeParam || !reason) {
-                return res.json({ output: "Error: Invalid syntax. Usage: ban <userid> <time hours/inf> <reason>" });
-            }
-
-            const userIndex = users.findIndex(u => u.id === targetId);
-            if (userIndex === -1) return res.json({ output: `Error: User ID ${targetId} not found.` });
-
-            let hours = null;   // null = permanent
-            if (timeParam.toLowerCase() !== 'inf') {
-                hours = parseFloat(timeParam);
-                if (!Number.isFinite(hours) || hours <= 0) return res.json({ output: "Error: Time must be a positive number of hours or 'inf'." });
-            }
-
-            banUser(users, userIndex, hours, reason);
-            const bannedName = users[userIndex].username;
-            const reset = resetUsername(users, userIndex);   // banned users lose their username
-            saveUsers(users);
-
-            const durationText = hours === null ? "permanently" : `${timeParam} hours`;
-            let output = `Success: User ${bannedName} (ID: ${targetId}) has been banned ${durationText} for: ${reason}`;
-            if (reset.changed) output += `\nTheir username was reset to ${reset.newName}.`;
-            else if (reset.conflict) output += `\nWarning: couldn't reset their username, another account already uses ${reset.newName}.`;
-            return res.json({ output });
-        }
-
-        case 'unban': {
-            const targetId = parseInt(args[1], 10);
-
-            if (!targetId) {
-                return res.json({ output: "Error: Invalid syntax. Usage: unban <userid>" });
-            }
-
-            const userIndex = users.findIndex(u => u.id === targetId);
-            if (userIndex === -1) return res.json({ output: `Error: User ID ${targetId} not found.` });
-
-            const wasBanned = unbanUser(users, userIndex);
-            saveUsers(users);
-
-            if (!wasBanned) return res.json({ output: `User ${users[userIndex].username} (ID: ${targetId}) is not banned.` });
-            return res.json({ output: `Success: User ${users[userIndex].username} (ID: ${targetId}) has been unbanned.` });
-        }
-
-        case 'reset-username': {
-            const targetId = parseInt(args[1], 10);
-
-            if (!targetId) {
-                return res.json({ output: "Error: Invalid syntax. Usage: reset-username <userid>" });
-            }
-
-            const userIndex = users.findIndex(u => u.id === targetId);
-            if (userIndex === -1) return res.json({ output: `Error: User ID ${targetId} not found.` });
-
-            const reset = resetUsername(users, userIndex);
-
-            if (reset.conflict) return res.json({ output: `Error: Another account already uses the username ${reset.newName}.` });
-            if (!reset.changed) return res.json({ output: `User ID ${targetId} already has the username ${reset.newName}.` });
-
-            saveUsers(users);
-            return res.json({ output: `Success: Username of ID ${targetId} reset from ${reset.oldName} to ${reset.newName}.` });
-        }
-
-        case 'upload':
-            return res.json({
-                output: "Upload sys ready! To upload an asset, make a multipart/form-data POST request to /api/admin/upload with 'type' (texture, sound, place), 'id', and the 'file' attached, along with your 3 admin keys."
-            });
-
-        default:
-            return res.json({ output: `Unknown command: '${cmd}'. Type 'help' for a list of commands.` });
-    }
+router.get('/renderTest', (req, res) => {
+    if (!req.user || !roleAtLeast(req.user, 'administrator')) return res.sendStatus(404);
+    res.sendFile(path.join(ROOT, 'renderTest.html'));
 });
 
-router.post('/api/admin/upload', upload.single('file'), (req, res) => {
+router.post('/api/admin/terminal', requireRole('moderator'), (req, res) => {
+    if (!req.is('application/json')) {
+        return res.status(415).json({ error: "Content-Type must be application/json." });
+    }
+
+    const { command } = req.body;
+
+    if (typeof command !== 'string' || !command.trim()) {
+        return res.status(400).json({ error: "No command given." });
+    }
+    if (command.length > 500) {
+        return res.status(400).json({ error: "Command is too long." });
+    }
+
+    res.json({ output: runCommand(req.user, command) });
+});
+
+router.post('/api/admin/upload', requireRole('administrator'), upload.single('file'), (req, res) => {
     const { type } = req.body;
     const file = req.file;
-
-    if (!keysValid(req.body)) {
-        return res.status(403).json({ error: "You didn't input the correct keys." });
-    }
 
     if (!file || !type) {
         return res.status(400).json({ error: "Missing needed fields: 'file' or 'type'" });
@@ -172,6 +72,8 @@ router.post('/api/admin/upload', upload.single('file'), (req, res) => {
     const finalPath = path.join(dirPath, `${newId}${ext}`);
 
     fs.writeFileSync(finalPath, file.buffer);
+
+    adminLog.record(req.user, `upload ${type}`, `Success: uploaded ${type} as asset ${newId}`);
 
     res.json({ message: `Successfully uploaded ${type}! Assigned new Asset ID: ${newId}` });
 });

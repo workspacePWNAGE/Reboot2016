@@ -1,0 +1,29 @@
+<head>
+    <%- include('pieces/metadata') %>
+    <title>Reboot 16 | Moderated</title>
+</head>
+
+<body>
+    <%- include('pieces/header') %>
+
+    <div class="content" style="text-align: center;">
+        <h1 class="authTitle">Account Moderated</h1>
+        <br>
+
+        <h2>Your account, <%= ban.username %>, has been banned.</h2>
+        <br>
+
+        <h1>Reason</h1>
+        <h2><%= ban.reason %></h2>
+        <br>
+
+        <h1>Ban length</h1>
+        <% if (ban.permanent) { %>
+            <h2>This ban is permanent.</h2>
+        <% } else { %>
+            <h2>Your ban ends on <%= ban.expiresText %>.</h2>
+        <% } %>
+    </div>
+
+    <%- include('pieces/footer') %>
+</body>

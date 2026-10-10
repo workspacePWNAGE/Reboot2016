@@ -3,11 +3,12 @@ const { VIEWS_DIR } = require('./config');
 const { getPeoplePageData } = require('./people');
 
 const PAGES = [
-    { route: '/',       view: 'index' },
-    { route: '/verity',       view: 'verity' },
+    { route: '/', view: 'index' },
+    { route: '/verity', view: 'verity' },
     { route: '/login',  view: 'login' },
     { route: '/signup', view: 'signup' },
     { route: '/people', view: 'people', data: (req) => getPeoplePageData(req.query) },
+    { route: '/moderated', view: 'moderated' },
 ];
 
 module.exports = function mountPages(app) {

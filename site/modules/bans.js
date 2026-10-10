@@ -25,7 +25,6 @@ function banUser(users, index, hours, reason) {
 function unbanUser(users, index) {
     const user = users[index];
     if (!isBanned(user)) {
-        // clear out an expired leftover too
         if (user.banned) clearBan(user);
         return false;
     }
@@ -52,7 +51,8 @@ function checkBan(users, index) {
                 : `This account is banned until ${new Date(user.banExpiration).toUTCString()}. Reason: ${user.banReason}`,
             banned: true,
             reason: user.banReason,
-            expiresAt: permanent ? null : user.banExpiration
+            expiresAt: permanent ? null : user.banExpiration,
+            redirect: '/moderated'      // website pages send banned users here
         }
     };
 }

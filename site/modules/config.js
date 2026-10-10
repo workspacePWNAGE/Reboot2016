@@ -20,5 +20,8 @@ module.exports = {
     DB_DIR: path.join(ROOT, 'database'),
     USERS_FILE: path.join(ROOT, 'database', 'users.json'),
     CONTENT_DIR: path.join(ROOT, 'content'),
-    VIEWS_DIR: path.join(ROOT, 'views')
+    VIEWS_DIR: path.join(ROOT, 'views'),
+    SESSION_COOKIE: 'r16-token',
+    SESSION_MAX_AGE_MS: 30 * 24 * 60 * 60 * 1000,
+    DAILY_BUX: 5,
 };
