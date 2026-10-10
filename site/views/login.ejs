@@ -11,7 +11,7 @@
     <div class="content">
         <h1 class="authTitle">Login</h1>
         <br><br>
-        <form id="loginForm" class="authForm" method="POST" action="javascript:void(0);">
+        <form id="loginForm" class="authForm" method="POST">
             <h2 id="authError" class="authError" style="color: #c00; display: none;"></h2>
             
             <h1>Username</h1>
@@ -28,7 +28,7 @@
 
     <%- include('pieces/footer') %>
 
-    <script>
+    <script nonce="<%= nonce %>">
         const form = document.getElementById('loginForm');
         const errorBox = document.getElementById('authError');
         const submitBtn = document.getElementById('loginSubmit');

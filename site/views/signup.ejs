@@ -50,7 +50,7 @@
             }
 
             form.addEventListener('submit', async (e) => {
-                e.preventDefault(); // This stops the browser from navigating or doing a GET request
+                e.preventDefault();
                 if (errorBox) errorBox.style.display = 'none';
 
                 const username = form.username.value.trim();
