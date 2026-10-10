@@ -2,6 +2,7 @@ const express = require('express');
 const { validColorIds } = require('./config');
 const { readUsers, saveUsers } = require('./database');
 const { isBanned, checkBan } = require('./bans');
+const profanityFilter = require('./profanityFilter');
 
 const router = express.Router();
 

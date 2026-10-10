@@ -25,11 +25,7 @@
                 "left_leg": 0,
                 "right_leg": 0
             }
-        },
-        "token": "c903abdbd1500826256d2ca09ba4d069f35fe3552a73f82f360e8f3367d398a1",
-        "bux": 105,
-        "lastDailyBux": "2026-10-10",
-        "role": "administrator"
+        }
     },
     {
         "id": 2,
@@ -57,6 +53,1230 @@
                 "left_leg": 0,
                 "right_leg": 0
             }
+        },
+        "role": "administrator"
+    },
+    {
+        "id": 3,
+        "username": "pwn",
+        "password": "$2b$10$AXbR2GfAMtuHbBJbCXyWq.ZevyP308cqLaVR7W6x.Ql/QCapbCwgi",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "af99d5ae0e80921bd3fbce134a7b1a07ffb59e2166ae0eb39af79dd1d4527c36",
+        "bux": 250,
+        "lastDailyBux": "2026-10-10",
+        "role": "administrator",
+        "bio": "Haio! I'm pwn, the lead developer for the website & api!"
+    },
+    {
+        "id": 4,
+        "username": "Bama",
+        "password": "$2b$10$CwG6y7mGd1vECUOkghrlnOHHBFpnvcL94bNg6EARbDX7yHTRLv.va",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "1d968d30a6d7be198314704c3dbd2539749ab2287351d2879d9b6d0df01246f5"
+    },
+    {
+        "id": 5,
+        "username": "keith1",
+        "password": "$2b$10$yIP3uFg2Vg9UIciP1U.n0.97ochhNuN7LhTWrHNyl1a0orU9gZ3wi",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
         }
+    },
+    {
+        "id": 6,
+        "username": "VerdantKId",
+        "password": "$2b$10$A.aNB0AXBnng4d0pHU/xLOkEiuCPGbL3XJlekkARcLNUSRQLJ456O",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "2543964e49ac73253941e5d7ebb29c349b3c2f99c704c6339ef4db22435e66c0",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 7,
+        "username": "Grassy",
+        "password": "$2b$10$.dDa5IsXN7OeSIg856nZt.S5rhBewedZ6kCBfiNunsVvTixa2p3Ea",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 8,
+        "username": "xboxlll",
+        "password": "$2b$10$U2J7sxigBRqoTAmhkb0rxuxh7s0vRoM.u/Rm/hHNScuGoRuGojc76",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "a789fcc4fe9ed64d6d9e906c43cd28df1fe566958fa325ff3267c523726262b8"
+    },
+    {
+        "id": 9,
+        "username": "player_9",
+        "password": "$2b$10$qSYYJi0XLXWXV3cBNHEyOeedjnpyX5MKrdELKLcB74Qg5DB9A1Plm",
+        "banned": true,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "banReason": "Inappropriate username.",
+        "banExpiration": null,
+        "bannedAt": 1791607879522
+    },
+    {
+        "id": 10,
+        "username": "IKAlex",
+        "password": "$2b$10$aaC64kNt9h36f3YTr2xS7.UCTLDqIdrebpOM4nQbNIft8GDSSUc8i",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "9f8608120a4411a6c8a6a6cde6d480835d5c4642e6a7338f54394ae353c4ded7"
+    },
+    {
+        "id": 11,
+        "username": "buildanddestroy381",
+        "password": "$2b$10$yE76wa17xK.NGnAxyQKUkOpl1JGauf9KoHRzUNnhB0M/6/xyVEM/i",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 12,
+        "username": "ROBLOX",
+        "password": "$2b$10$V6hV/prxO8agnkt6z5a0zee7cs.bR5ryGhBgqCeoA38ve3xb//kvG",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "3b314bffe94f91ca56df9a72092aac4d3a90007de36dae194d3293f1ee5bf956"
+    },
+    {
+        "id": 13,
+        "username": "Builderman",
+        "password": "$2b$10$NCShFAmi.41OUhXrRRQuOOkU0/qnBTjiUBfhxxx9wXp9VwkffdqxK",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 14,
+        "username": "JohnDoe",
+        "password": "$2b$10$voDAcp8Zw332bbQ1EeXsDecdLXrZIIaDtvYUCh17RigsFtM3JO3u6",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 15,
+        "username": "JaneDoe",
+        "password": "$2b$10$ytrIr1Cv8uySWvc1/6rtnurANRK6wS.ej7oDLcTjoItN3HrCqMB1u",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 16,
+        "username": "Bananaboychild222",
+        "password": "$2b$10$J7vEMESxGTWcx3MXPtuA6e9jSlqWt3NhAFg8VKmrVx6wz1N03g3za",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "131dde5a3a6c89343652cda8dd5b081b7fe6377fa753b28f1148ad44f1ec8071"
+    },
+    {
+        "id": 17,
+        "username": "GIGACHAD",
+        "password": "$2b$10$BoO3pN2vzpGVigRugFGBXOH1/FpGgM6zmsY2GlcghROmgt.GRnZFC",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 18,
+        "username": "Reboot16",
+        "password": "$2b$10$OrROsOnvK2A252AjX.jFK.Xd7oLBS4xlRLTbn48NNvIj4FjSYk4Mm",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 19,
+        "username": "dead",
+        "password": "$2b$10$.8E8ks2o1U0rTY73Pyz0YOsHm2HnSNbvYueD43oCVvSSqo5MJzBxq",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "fe7ac62ca4a67e3d751bf5aeb191bbae2ba76997aedf81f7f8326749c6191d2a"
+    },
+    {
+        "id": 20,
+        "username": "NULL_00",
+        "password": "$2b$10$zApijPJvQYHumUAI.Cbf9.TeJX4Uu2NzxSaxAmQk1IE8egar/VeAK",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 21,
+        "username": "MIKU",
+        "password": "$2b$10$44KvrFD46CMYsHAo4NfS4ufs1t8CtphlvB4QGVtJecXrYfORarsLm",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 22,
+        "username": "Dev",
+        "password": "$2b$10$9bbYTaTgeqS5SmIaSszHDeQLtBtbW11etRWW6d57lgWdALV/2b.kK",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "136ddd693159905d9beb058bc78eba96bca0e39ef957dd0b64f62060a911c39c"
+    },
+    {
+        "id": 23,
+        "username": "player_23",
+        "password": "$2b$10$nFLzdX7.ig9DDNsB1PAx1.gH8UEjkMHEhmQvfhG8YWiQ0rEYR1fsa",
+        "banned": true,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "banReason": "Really?",
+        "banExpiration": null,
+        "bannedAt": 1791609094314
+    },
+    {
+        "id": 24,
+        "username": "player_24",
+        "password": "$2b$10$GPQzU/ovhiBXu2o/NWJk3.T8J1rFPCNx0YHa/jT55nVlftf/iAYua",
+        "banned": true,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "banReason": "Dude wtf",
+        "banExpiration": null,
+        "bannedAt": 1791609104247
+    },
+    {
+        "id": 25,
+        "username": "Steam",
+        "password": "$2b$10$vcLRVVQI1sg.edsrdMjFKu7eI8atupGdihRCQKYkG2//j0XZrQ4fG",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 26,
+        "username": "john_bowing",
+        "password": "$2b$10$x4ox.islMhB/Vk/e9NBuK.Mkz9I9hXv7F442/DLMIj0mX0LufClRm",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "0ca0dcc5ea293af014877499dea5b148db115bd929c4697973b68d93fa25d90a",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 27,
+        "username": "Santa",
+        "password": "$2b$10$Ayn2fLqho8dSWAMm3Br2suhA0hMtV.Qmve41oqDlYGfb/pZkSpCtu",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 28,
+        "username": "bean",
+        "password": "$2b$10$pr8olTxdQukQdlH.zZPhguAMU16aWAqEIr1lwWTRaHIOQnhF7hVAa",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "c2145ba067fe03d014eb330cea5b7623b97986c9dae9606f295d82a20b59e0c1"
+    },
+    {
+        "id": 29,
+        "username": "DAS",
+        "password": "$2b$10$EaJQw.pUrRdfsNiQrT35f.hXXtR6ku1JrLMPBS6VY0gz4qsJ8hHQq",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "a7cafc5d53ccbee0e89622abffa2e094211e0cdf8b0fba4dffe3a282be7357c9"
+    },
+    {
+        "id": 30,
+        "username": "Norstorian",
+        "password": "$2b$10$G/iVACCRmSY.KCnZ4NyDRe9WOlOidh05Z5Fk7ZAWhzX4ViXIg61Te",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 31,
+        "username": "Sk3Tchy",
+        "password": "$2b$10$X/rdnswCiGadj3.snAp2G.G6.K4Wr7vfPjgDlOFgJ2qCqPsDtzOnm",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "eb182581d813fad53edc1c7e28d370aceb3a90e077e2f79f839c340ffe331b37",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 32,
+        "username": "Sigmaboi123",
+        "password": "$2b$10$s6bm5rc0kZPyAMxUudX/DOtZnyd.ar6oomdiB/RTb1ij/vXhYuNyO",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "acb5089303b2a33b132e015144644c1f9fe7ebe25bb9d364d999bce4470ceb55"
+    },
+    {
+        "id": 33,
+        "username": "Captin_Kitten",
+        "password": "$2b$10$8xTttV49W/dLyDFgIHK8Jei7NUR8TYzkKDEYWatiDkVQ93BDcMj8K",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "8bfac5fb9daffee6887460e82419109bd5fda90702dd937e21edd5ac35a504e5",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 34,
+        "username": "BAL814",
+        "password": "$2b$10$7mmVWXNGu9udZ8my4Unh5uQUbNhneLfc576YHLg9eX4Fs4CF49pD2",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "de7ee50f83ed3f42a6305d966bae89ca04bdb6f6f5bdc2e8bcc0fac5d28e9c96"
+    },
+    {
+        "id": 35,
+        "username": "34h",
+        "password": "$2b$10$kz1v6xZBRyrKkjcfvplBMO4b4qpTqq0oenV/ejnzCbKKBml2pFfsK",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "7940216e96b6a88e4dd35af82ef79b6ea8dac4e8e1f47d16ac894692aace3fa2"
+    },
+    {
+        "id": 36,
+        "username": "HomerSimpson",
+        "password": "$2b$10$oXTCs/pwRKk/LrMTUgWTSOQUu3ufPm91cdCyZ/0BSKGMBocxonZF2",
+        "banned": false,
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "08e121ba5eb31874a32cfd8323d041dee4db4b5a1cc486650f78db7cd6632c57",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 37,
+        "username": "AerobitWindows",
+        "password": "$2b$10$GJ4nrEqy2sm92f4L4l5OlunLgy1/XmuY2CNPYt5sWiYYbYlfz/B/S",
+        "banned": false,
+        "role": "user",
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "dac2e46434a5849eaaa49ea9e559b4e91ec9ef1dd452b0b1fbdca11b4675a3e6",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 38,
+        "username": "BAL8I4",
+        "password": "$2b$10$3GG3GigHMP2aDb.UAzUgN.BqHPvNdc8/CcI88B6qhzQ2rS.KNb93y",
+        "banned": false,
+        "role": "user",
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "c54e6ece05ed8db755e3b8012b007315f9925bb31dbd6d08dec387b4236cdcdf",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 39,
+        "username": "Apple",
+        "password": "$2b$10$B/ge4ZvwVKMo1Y6ju4KYuuSBBJhsLm9jvBeeM1pXnMLOCxB8xL0pu",
+        "banned": false,
+        "role": "user",
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "0e82ae5792bf62a047806a4dced926660e9bc0bc466dc60db6eb85c09025fe1a",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 40,
+        "username": "Eman_Lol",
+        "password": "$2b$10$qBp78cx.EuPiqlAY4GO.Ceo048Hq1ZS6KxXwrVSFNfldAFCdLasdC",
+        "banned": false,
+        "role": "user",
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "213525d9bcc79a9cc2d9a01865a9f3984e46eb5536a4d0297c89b8e7244d9e26",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 41,
+        "username": "jujojaker",
+        "password": "$2b$10$AJuYPJzJx5kK4IMb1ZMNputioZTPbwgMgnb8p9ZK4qhpahXDAVk6.",
+        "banned": false,
+        "role": "user",
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "a25648d855fa0f0d56c5768d6ff00e2ea309324d9672f6ec6417c7b3182320b3",
+        "bux": 5,
+        "lastDailyBux": "2026-10-10"
+    },
+    {
+        "id": 42,
+        "username": "PANYNJ",
+        "password": "$2b$10$3TFFNBkqqUO/KDC2O91HF.QTE3q.g1uWJ6aZ1KVke/EO8uJomPsUa",
+        "banned": false,
+        "role": "user",
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        },
+        "token": "582bed275d8d952ac86d0becd57124bc098c4e360465a64a92a80c125dc6d77a"
     }
 ]
