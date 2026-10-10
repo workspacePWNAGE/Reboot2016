@@ -1,0 +1,357 @@
+@font-face {
+    font-family: comics;
+    src: url(comics.ttf);
+}
+
+@font-face {
+    font-family: segoe;
+    src: url(segoe.ttf);
+}
+
+body {
+    color: white;
+    background-image: repeating-linear-gradient(45deg, #181818 0, #181818 10px, transparent 0, transparent 50%);
+	background-size: 33px 33px;
+	background-color: #131313;
+    font-family: segoe, Verdana, sans-serif;
+    margin: 0 auto;
+}
+
+.header {
+    margin: 0px auto;
+    width: 1300px;
+    height: 50px;
+    background-color: rgb(40, 40, 40);
+    text-align: left;
+    overflow: hidden; 
+}
+
+.header .logo {
+    height: 40px;
+    margin: 5px;
+    float: left;
+}
+
+.header a {
+    color: white;
+    font-size: 22px;
+    text-decoration: none;
+    height: 50px;
+    line-height: 50px;
+    padding: 0 7px;
+    float: left;
+}
+
+.header .authStatus {
+    color: white;
+    font-size: 22px;
+    text-decoration: none;
+    height: 50px;
+    line-height: 50px;
+    padding: 0 7px;
+    float: right;
+}
+
+.header a:hover {
+    background-image: linear-gradient(rgba(100, 100, 100, 0.121), rgba(204, 204, 204, 0.121));
+}
+
+.footer {
+    margin: 0px auto;
+    width: 1300px;
+    text-align: center;
+    color:rgb(56, 56, 56);
+}
+
+.footer hr {
+    border: none;
+    height: 2px;
+    background-color: rgb(56, 56, 56);
+}
+
+.footer p {
+    margin: 0px auto;
+}
+
+.footer a {
+    color: rgb(87, 51, 87);
+    text-decoration: none;
+    margin: 0px auto;
+}
+
+.content {
+    width: 1290px;
+    padding: 5px;
+    margin: 0px auto;
+    background-color: rgba(34, 34, 34, 0.8);
+    padding-bottom: 50px;
+}
+
+.content a {
+    color: rgb(255, 127, 253);
+    text-decoration: none;
+}
+
+.content .authTitle {
+    margin: 0px auto;
+    color: white;
+    font-size: 40px;
+    margin-top: 25px;
+    text-align: center;
+}
+
+.content input {
+    background-color: rgb(100, 100, 100);
+    background-image: linear-gradient(rgb(234, 67, 176), rgb(127, 49, 130));
+    border: 1px solid rgb(50, 50, 50);
+    color: white
+}
+
+.content input[type="button"],
+.content input[type="search"],
+.content input[type="submit"] {
+    background-color: rgb(132, 51, 136);
+    background-image: linear-gradient(rgb(219, 63, 164), rgb(132, 51, 136));
+    border: 1px solid rgb(107, 14, 108);
+    color: white;
+    cursor: pointer;
+}
+
+.authForm {
+    margin: 0px auto;
+    text-align: center;
+}
+
+.authForm a {
+    color: rgb(255, 127, 253);
+    text-decoration: none;
+}
+
+.authForm h1 {
+    margin: 0px auto;
+    font-size: 20px;
+}
+
+.authForm h2 {
+    margin: 0px auto;
+    font-size: 16px;
+    font-style: italic;
+}
+
+.content .h1Title {
+    margin: 0px auto;
+    color: white;
+    font-size: 40px;
+    margin-top: 25px;
+    text-align: center;
+}
+
+.content .characterPanels {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.content .leftCharacterPanel,
+.content .rightCharacterPanel {
+    margin: 0;
+}
+
+.content .leftCharacterPanel {
+    width: 415px;
+    text-align: center;
+    border: 1px solid #818181;
+    padding-bottom: 15px;
+}
+
+.content .leftCharacterPanel img {
+    width: 600px;
+}
+
+.content .leftCharacterPanel p a {
+    color: rgb(255, 127, 253);
+    text-decoration: none;
+}
+
+.content .rightCharacterPanel {
+    width: 715px;
+    text-align: center;
+    border: 1px solid #818181;
+    padding-bottom: 15px;
+}
+
+.content .rightCharacterPanel .item {
+    margin-left: 10px;
+    position: relative;
+    border: 1px solid #818181;
+    width: 100px;
+}
+
+.content .rightCharacterPanel .item img {
+    display: block;
+    width: 100%;
+}
+
+.content .rightCharacterPanel .item .nameOverlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 20%;
+    background-image: linear-gradient(to top, rgb(0, 0, 0), rgba(0, 0, 0, 0));
+}
+
+.content .rightCharacterPanel a {
+    margin: 0;
+    color: rgb(255, 127, 253);
+    text-decoration: none;
+}
+
+.content .rightCharacterPanel p {
+    display: inline;
+    margin: 0;
+    color: rgb(255, 255, 255);
+}
+
+.content textarea,
+.content select {
+    background-color: rgb(100, 100, 100);
+    background-image: linear-gradient(rgb(234, 67, 176), rgb(127, 49, 130));
+    border: 1px solid rgb(50, 50, 50);
+    color: white;
+}
+
+.content .managerPanels {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.content .managerForm {
+    box-sizing: border-box;
+    width: 415px;
+    flex-shrink: 0;
+    text-align: center;
+    border: 1px solid #818181;
+    padding-bottom: 15px;
+}
+
+.content .managerList {
+    box-sizing: border-box;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    border: 1px solid #818181;
+    padding-bottom: 15px;
+}
+
+.content .managerHeading {
+    margin: 10px auto;
+    font-size: 24px;
+    text-align: center;
+}
+
+.content .managerList table {
+    width: calc(100% - 20px);
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+.content .managerList th,
+.content .managerList td {
+    border: 1px solid #818181;
+    padding: 5px 8px;
+    text-align: left;
+}
+
+.content .managerList th {
+    background-color: rgb(40, 40, 40);
+}
+
+.content .managerInline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.content .managerMessage {
+    margin: 15px auto 0;
+    text-align: center;
+    font-size: 18px;
+}
+
+.content .managerError {
+    color: rgb(255, 107, 107);
+}
+
+.content .managerSuccess {
+    color: rgb(130, 225, 130);
+}
+
+.content .rightCharacterPanel a[data-tab-link] {
+    cursor: pointer;
+}
+
+.content .bodyFigure {
+    display: grid;
+    grid-template-columns: 50px 50px 50px 50px;
+    grid-template-rows: 50px 100px 100px;
+    gap: 4px;
+    justify-content: center;
+    margin: 15px auto;
+}
+
+.content .bodyPart {
+    padding: 0;
+    border: 2px solid #818181;
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.content .bodyPart.selected {
+    border-color: rgb(255, 127, 253);
+}
+
+.content .bodyPart[data-part="head"]     { grid-column: 2 / 4; grid-row: 1; }
+.content .bodyPart[data-part="rightArm"] { grid-column: 1;     grid-row: 2; }
+.content .bodyPart[data-part="torso"]    { grid-column: 2 / 4; grid-row: 2; }
+.content .bodyPart[data-part="leftArm"]  { grid-column: 4;     grid-row: 2; }
+.content .bodyPart[data-part="rightLeg"] { grid-column: 2;     grid-row: 3; }
+.content .bodyPart[data-part="leftLeg"]  { grid-column: 3;     grid-row: 3; }
+
+.content .colorPalette {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    max-width: 340px;
+    margin: 10px auto 15px;
+}
+
+.content .swatch {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 2px solid #818181;
+    cursor: pointer;
+}
+
+.content .swatch.selected {
+    border-color: white;
+}
+
+.content input[type="button"]:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.content .colorStatus {
+    display: block;
+    min-height: 22px;
+    margin-top: 8px;
+}

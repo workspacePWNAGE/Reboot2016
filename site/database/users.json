@@ -1,0 +1,58 @@
+[
+    {
+        "id": 1,
+        "username": "Reboot2016",
+        "password": "$2b$10$hvFDsbaZu2LMYTt4X2H0A.PMd.Ot8HGFo/FNYdNCh./JIbFFqrR9S",
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    },
+    {
+        "id": 2,
+        "username": "314jax",
+        "password": "$2b$10$iXygs/Cldn4IRDeqL3krm.co8blrV4VoyHnVAdugOUapqN1vnLJGK",
+        "avatar": {
+            "hat1": 0,
+            "hat2": 0,
+            "hat3": 0,
+            "shirt": 0,
+            "pants": 0,
+            "bodycolors": {
+                "head": 1,
+                "torso": 1,
+                "left_arm": 1,
+                "right_arm": 1,
+                "left_leg": 1,
+                "right_leg": 1
+            },
+            "bodymeshes": {
+                "head": 0,
+                "torso": 0,
+                "left_arm": 0,
+                "right_arm": 0,
+                "left_leg": 0,
+                "right_leg": 0
+            }
+        }
+    }
+]

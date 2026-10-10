@@ -1,0 +1,82 @@
+<head>
+    <%- include('pieces/metadata') %>
+    <title>Reboot 16 | Sign up</title>
+</head>
+
+<body>
+    <%- include('pieces/header') %>
+
+    <div class="content">
+        <h1 class="authTitle">Sign Up</h1>
+        <br><br>
+        <form id="signupForm" class="authForm">
+            <h2 id="authError" class="authError" style="color: #c00; display: none;"></h2>
+            
+            <h1>Username</h1>
+            <h2>This is how people will know you!</h2>
+            <input type="text" name="username" placeholder="Username" autocomplete="username" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 characters: letters, numbers, and underscores only" required> <br><br>
+
+            <h1>Password</h1>
+            <h2>You'll use this to log in to your account.</h2>
+            <input type="password" name="password" placeholder="Password" autocomplete="new-password" maxlength="128" required> <br><br>
+            
+            <h1>Re-type your Password</h1>
+            <h2>Make sure you typed it correctly!</h2>
+            <input type="password" name="confirm" placeholder="Re-type Password" autocomplete="new-password" maxlength="128" required> <br><br>
+                
+            <input type="submit" id="signupSubmit" value="Sign Up" style="padding: 5px 30px;">
+        </form>
+    </div>
+
+    <%- include('pieces/footer') %>
+
+    <script>
+        const form = document.getElementById('signupForm');
+        const errorBox = document.getElementById('authError');
+        const submitBtn = document.getElementById('signupSubmit');
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.style.display = 'block';
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+
+            const username = form.username.value.trim();
+            const password = form.password.value;
+            const confirm = form.confirm.value;
+
+            if (password !== confirm) {
+                return showError("Your passwords don't match!");
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.value = 'Signing up...';
+
+            try {
+                const res = await fetch('/api/register-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                let data = {};
+                try { data = await res.json(); } catch (_) {}
+
+                if (!res.ok) {
+                    showError(data.error || 'Something went wrong. Please try again.');
+                } else {
+                    window.location.href = '/login';
+                    return;
+                }
+            } catch (err) {
+                showError("Couldn't reach the server. Please try again.");
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.value = 'Sign Up';
+        });
+    </script>
+</body>

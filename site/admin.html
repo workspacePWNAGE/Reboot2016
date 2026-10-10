@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            height: 100%;
+            overflow: hidden;
+        }
+        #terminal-container {
+            padding: 10px 15px;
+            height: calc(100% - 20px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        #output {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        #input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 2px;
+        }
+        #prompt-symbol {
+            margin-right: 8px;
+        }
+        #cli {
+            background: transparent;
+            border: none;
+            color: #d4d4d4;
+            outline: none;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            flex-grow: 1;
+            caret-color: #d4d4d4;
+        }
+        .error { color: #f44747; }
+        .success { color: #4CAF50; }
+        .system { color: #808080; }
+    </style>
+</head>
+<body>
+
+    <div id="terminal-container">
+        <div id="output"></div>
+        <div id="input-line">
+            <span id="prompt-symbol">Key 1:</span>
+            <input type="password" id="cli" autocomplete="off" autofocus>
+        </div>
+    </div>
+
+    <input type="file" id="hidden-file-input" style="display: none;">
+
+    <script>
+        const outputDiv = document.getElementById('output');
+        const cliInput = document.getElementById('cli');
+        const promptSymbol = document.getElementById('prompt-symbol');
+        const terminalContainer = document.getElementById('terminal-container');
+        const fileInput = document.getElementById('hidden-file-input');
+
+        let state = 'LOGIN_1';
+        let keys = { key1: '', key2: '', key3: '' };
+        let pendingUploadType = '';
+
+        function printLine(text, className = '') {
+            const span = document.createElement('span');
+            span.textContent = text + '\n';
+            if (className) span.className = className;
+            outputDiv.appendChild(span);
+            terminalContainer.scrollTop = terminalContainer.scrollHeight;
+        }
+
+        document.addEventListener('click', () => cliInput.focus());
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                printLine("Upload cancelled.", "system");
+                resetPrompt();
+                return;
+            }
+
+            printLine(`Uploading ${file.name}...`, "system");
+
+            const formData = new FormData();
+            formData.append('key1', keys.key1);
+            formData.append('key2', keys.key2);
+            formData.append('key3', keys.key3);
+            formData.append('type', pendingUploadType);
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (data.error) printLine(data.error, "error");
+                else printLine(data.message, "success");
+            } catch (err) {
+                printLine("Upload failed: Network error.", "error");
+            }
+
+            fileInput.value = '';
+            pendingUploadType = '';
+            resetPrompt();
+        });
+
+        cliInput.addEventListener('keydown', async (e) => {
+            if (e.key !== 'Enter') return;
+            
+            const inputVal = cliInput.value.trim();
+            cliInput.value = ''; 
+
+            if (state === 'LOGIN_1') {
+                keys.key1 = inputVal;
+                printLine("Key 1 >>");
+                promptSymbol.innerText = "Key 2:";
+                state = 'LOGIN_2';
+                return;
+            }
+            if (state === 'LOGIN_2') {
+                keys.key2 = inputVal;
+                printLine("Key 2 >>");
+                promptSymbol.innerText = "Key 3:";
+                state = 'LOGIN_3';
+                return;
+            }
+            if (state === 'LOGIN_3') {
+                keys.key3 = inputVal;
+                printLine("Key 3 >>");
+                
+                cliInput.type = "text"; 
+                printLine("\nAuthentication complete.", "system");
+                resetPrompt();
+                return;
+            }
+
+            if (state === 'UPLOAD_TYPE') {
+                printLine(`Upload Type: ${inputVal}`);
+                const type = inputVal.toLowerCase();
+                
+                if (['texture', 'sound', 'place'].includes(type)) {
+                    pendingUploadType = type;
+                    fileInput.click(); 
+                    promptSymbol.innerText = "";
+                    cliInput.style.display = "none";
+                } else {
+                    printLine("Invalid type. Allowed: texture, sound, place.", "error");
+                    resetPrompt();
+                }
+                return;
+            }
+
+            if (state === 'READY') {
+                if (!inputVal) {
+                    printLine("admin@server:~$ ");
+                    return;
+                }
+                
+                printLine(`admin@server:~$ ${inputVal}`);
+                const args = inputVal.split(/\s+/);
+                const cmd = args[0].toLowerCase();
+
+                if (cmd === 'upload') {
+                    state = 'UPLOAD_TYPE';
+                    promptSymbol.innerText = "Asset type (texture/sound/place): ";
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/admin/terminal', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...keys, command: inputVal })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.error) printLine(data.error, "error");
+                    else if (data.output) printLine(data.output);
+                    else printLine(JSON.stringify(data), "system");
+                    
+                } catch (err) {
+                    printLine("Command failed: Network error.", "error");
+                }
+                
+                terminalContainer.scrollTop = terminalContainer.scrollHeight;
+            }
+        });
+
+        function resetPrompt() {
+            state = 'READY';
+            promptSymbol.innerText = "admin@server:~$";
+            cliInput.style.display = "block";
+            cliInput.focus();
+        }
+    </script>
+</body>
+</html>

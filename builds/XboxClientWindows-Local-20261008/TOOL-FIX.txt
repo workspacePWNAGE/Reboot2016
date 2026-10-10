@@ -1,0 +1,13 @@
+Tool equip crash fix - 2026-10-08
+
+Fixes an XboxClientWindows assertion when receiving an equipped Tool's
+replicated Grip update. The server remains responsible for changing the
+grip weld; the client receives its replicated state without asserting.
+
+Tested with the included Natural Disaster Survival GreenBalloon:
+equip, replicated grip changes, client Activate, unequip, return to menu.
+The original ZIP reproduced this crash; the updated executable passed.
+The map itself has not been edited. Its existing script/online-asset errors
+remain separate issues; this fix does not claim to repair every map script.
+
+Local play only: run Play.cmd. Login and LAN launchers remain excluded.

@@ -1,0 +1,97 @@
+Marshaller started on thread 1c4000001c4 (176469451895455972)
+
+[Library] Rejected MyTestPlace.rbxlx: Waiting for stable copy
+[Library] Rejected Natural Disaster Survival (1).rbxl: Waiting for stable copy
+[Library] Rejected TestPlace2.rbxlx: Waiting for stable copy
+GetFFlag failed for flag: ConvertMyPlaceNameInXboxApp
+GetFFlag failed for flag: ConvertMyPlaceNameInXboxApp
+GetFFlag failed for flag: UseNewCarouselInXboxApp
+Error: UserData:GetRbxUserId() - UserData has not been initialized. Don't do that!
+PlatformService: beginGetPartyMembers...
+
+Original Xbox shell started; online Xbox services are not implemented.
+FileSystem temp directory: C:\users\steamuser\AppData\Local\Temp\Roblox
+HeroStatsManager - Error getting party members: beginGetPartyMembers failed
+MeshContentProvider failed to process rbxassetid://28268222 because 'could not fetch'
+Image failed to load: rbxassetid://28268380: Request failed
+MeshContentProvider failed to process rbxassetid://28268263 because 'could not fetch'
+MeshContentProvider failed to process rbxassetid://28268200 because 'could not fetch'
+MeshContentProvider failed to process rbxassetid://28268301 because 'could not fetch'
+MeshContentProvider failed to process rbxassetid://28268164 because 'could not fetch'
+httpGet http://www.roblox.com/asset/?id=266865130 failed. Trying again. Error: invalid string position.  Elapsed time: 0.501408
+httpGet http://www.roblox.com/asset/?id=266865089 failed. Trying again. Error: invalid string position.  Elapsed time: 0.51633
+httpGet http://www.roblox.com/asset/?id=252763035 failed. Trying again. Error: invalid string position.  Elapsed time: 0.440627
+httpGet http://www.roblox.com/asset/?id=252760986 failed. Trying again. Error: invalid string position.  Elapsed time: 0.466649
+httpGet http://www.roblox.com/asset/?id=271094028 failed. Trying again. Error: invalid string position.  Elapsed time: 0.425689
+httpGet http://www.roblox.com/asset/?id=252762652 failed. Trying again. Error: invalid string position.  Elapsed time: 0.471654
+httpGet http://www.roblox.com/asset/?id=252760980 failed. Trying again. Error: invalid string position.  Elapsed time: 0.472654
+httpGet http://www.roblox.com/asset/?id=252761439 failed. Trying again. Error: invalid string position.  Elapsed time: 0.47966
+httpGet http://www.roblox.com/asset/?id=1079902 failed. Trying again. Error: invalid string position.  Elapsed time: 0.393062
+httpGet http://www.roblox.com/asset/?id=31117192 failed. Trying again. Error: invalid string position.  Elapsed time: 0.396089
+httpGet http://www.roblox.com/asset/?id=263553650 failed. Trying again. Error: invalid string position.  Elapsed time: 0.349453
+httpGet http://www.roblox.com/asset/?id=1079903 failed. Trying again. Error: invalid string position.  Elapsed time: 0.403071
+httpGet http://www.roblox.com/asset/?id=252760981 failed. Trying again. Error: invalid string position.  Elapsed time: 0.495674
+httpGet http://www.roblox.com/asset/?id=76856435 failed. Trying again. Error: invalid string position.  Elapsed time: 0.359314
+Content failed for http://www.roblox.com/asset/?id=266865089 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=266865089: Request failed
+Content failed for http://www.roblox.com/asset/?id=266865130 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=266865130: Request failed
+Content failed for http://www.roblox.com/asset/?id=252763035 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=252763035: Request failed
+Content failed for http://www.roblox.com/asset/?id=252760986 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=252760986: Request failed
+Content failed for http://www.roblox.com/asset/?id=252762652 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=252762652: Request failed
+Content failed for http://www.roblox.com/asset/?id=252760980 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=252760980: Request failed
+Content failed for http://www.roblox.com/asset/?id=1079903 because invalid string position
+Content failed because invalid string position
+Content failed for http://www.roblox.com/asset/?id=31117192 because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=1079903: Request failed
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=31117192: Request failed
+Content failed for http://www.roblox.com/asset/?id=252761439 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=252761439: Request failed
+Content failed for http://www.roblox.com/asset/?id=76856435 because invalid string position
+Content failed for http://www.roblox.com/asset/?id=252760981 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=76856435: Request failed
+Content failed because invalid string position
+Content failed for http://www.roblox.com/asset/?id=1079902 because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=252760981: Request failed
+Content failed because invalid string position
+Content failed for http://www.roblox.com/asset/?id=271094028 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=271094028: Request failed
+MeshContentProvider failed to process http://www.roblox.com/asset/?id=1079902 because 'could not fetch'
+Content failed for http://www.roblox.com/asset/?id=263553650 because invalid string position
+Content failed because invalid string position
+Image failed to load: http://www.roblox.com/asset/?id=263553650: Request failed
+User and Event initialization finished. Opening AppHub
+set the social screen data
+StorePane - BeginGetCatalogInfo failed because: Xbox catalog unavailable offline
+[Library] Discovered/updated game 900000100: MyTestPlace.rbxlx
+[Library] Discovered/updated game 900000107: Natural Disaster Survival (1).rbxl
+[Library] Discovered/updated game 900000111: TestPlace2.rbxlx
+[Library] Menu refreshed: 3 games, 0 recent
+[Library] Menu refreshed: 3 games, 0 recent
+[Library] Menu refreshed: 3 games, 0 recent
+[GameDetails] Open 900000111: TestPlace2
+[GameDetails] Preference failed game 900000111: Ratings and favourites require an account; local play does not
+[GameDetails] Preference failed game 900000111: Ratings and favourites require an account; local play does not
+[GameDetails] 900000111 get: Ratings and favourites require an account; local play does not
+[GameDetails] 900000111 get: Ratings and favourites require an account; local play does not
+[Library] Launching registered game 900000111: TestPlace2
+ViewChanged: 1
+New view is game
+HeroStatsManager - event name: GamesCount event value: nil
+PlatformService: setting hero stat..
+
+HeroStatsManager - event name: GamesCount event status: 3

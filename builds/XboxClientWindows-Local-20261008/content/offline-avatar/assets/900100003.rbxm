@@ -1,0 +1,1 @@
+<roblox version="4"><Item class="Hat" referent="RBX0"><Properties><string name="Name">LocalDemoHat</string></Properties><Item class="Part" referent="RBX1"><Properties><string name="Name">Handle</string><Vector3 name="Size"><X>2</X><Y>0.5</Y><Z>2</Z></Vector3><bool name="CanCollide">false</bool><int name="BrickColor">21</int></Properties></Item></Item></roblox>

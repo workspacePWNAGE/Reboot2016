@@ -1,0 +1,24 @@
+XboxClientWindows - LOCAL PLAY ONLY
+
+1. Extract the ENTIRE ZIP into a writable folder on your Windows PC.
+2. Double-click Play.cmd. Do not run the executable from inside the ZIP.
+3. Press A on the Xbox start screen, select a game, and open its details.
+4. Select PLAY. Use the normal Leave/Back flow to return to the Xbox menu.
+
+No login, account server, LAN server, or Visual Studio is required.
+Account-backed favourites/ratings are unavailable in this guest package.
+This package plays locally; it does not connect friends to each other.
+An Xbox-compatible controller is recommended. Keep all folders together.
+Windows 10/11 recommended; x86 Visual C++ runtime DLLs are bundled.
+
+Included games: Local Test plus the current games folder (including Natural
+Disaster Survival). Add local .rbxl/.rbxlx files under games and restart.
+Some maps may reference online assets that are not bundled.
+
+Game artwork: games/assets/<game_id>/thumbnail.png, image1.png, image2.png.
+IDs appear in local-game-library.json after the library scans a new place.
+Optional metadata.json fields: title and description; description.txt also
+supported. Use PNGs up to 2048x2048 and 4 MiB each.
+
+Private account databases, credentials, login/LAN launchers, source code,
+debug symbols, and development logs are not included.
