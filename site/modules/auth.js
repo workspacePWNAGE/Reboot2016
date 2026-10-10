@@ -64,39 +64,25 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
 });
 
 router.post('/api/login-user', authLimiter, async (req, res) => {
-    const { username, password, token } = req.body;
+    const { username, password, token: captchaToken } = req.body;
 
-    const isValidCaptcha = await verifyTurnstile(token, req.ip);
+    const isValidCaptcha = await verifyTurnstile(captchaToken, req.ip);
     if (!isValidCaptcha) {
         return res.status(400).json({ error: "Please complete the captcha!" });
-    }
-
-    const users = readUsers();
-
-    if (token) {
-        const userIndex = users.findIndex(u => u.token === token);
-        if (userIndex !== -1) {
-            const ban = checkBan(users, userIndex);
-            if (ban) return res.status(ban.status).json(ban.body);
-
-            const { password: _, ...userData } = users[userIndex];
-            return res.json({
-                message: "Login successful via token!",
-                cookieToken: token,
-                user: userData
-            });
-        }
-        return res.status(401).json({ error: "Invalid session token." });
     }
 
     if (!username || !password) {
         return res.status(400).json({ error: "Username and password are required." });
     }
 
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === username.toLowerCase());
+    const users = readUsers();
+
+    const userIndex = users.findIndex(
+        u => u.username.toLowerCase() === username.toLowerCase()
+    );
 
     if (userIndex === -1) {
-        return res.status(401).json({ error: "Bad username or password!" });
+        return res.status(401).json({ error: "Bad username or password." });
     }
 
     const user = users[userIndex];
@@ -107,12 +93,8 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
     }
 
     const ban = checkBan(users, userIndex);
+
     if (ban) {
-        if (!users[userIndex].token) {
-            users[userIndex].token = crypto.randomBytes(32).toString('hex');
-            saveUsers(users);
-        }
-        setSessionCookie(req, res, users[userIndex].token);
         return res.status(ban.status).json(ban.body);
     }
 
@@ -125,7 +107,7 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
 
     const { password: _, ...userData } = users[userIndex];
 
-    res.json({
+    return res.json({
         message: "Login successful!",
         cookieToken: sessionToken,
         user: userData
