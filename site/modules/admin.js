@@ -16,14 +16,29 @@ const upload = multer({ storage: multer.memoryStorage() });
 const RENDERER_URL = (process.env.AVATAR_RENDERER_URL || 'http://0.0.0.0:4417').replace(/\/+$/, '');
 const RENDERER_API_KEY = process.env.AVATAR_RENDERER_API_KEY || '';
 
-function getCandidateTextureDirs() {
-    return [
-        path.resolve(ROOT, 'content', 'textures'),
-        path.resolve(ROOT, 'build', 'content', 'textures'),
-        path.resolve(ROOT, 'bin', 'content', 'textures'),
-        path.resolve(ROOT, 'renderer', 'content', 'textures'),
-        path.resolve(process.cwd(), 'content', 'textures')
-    ];
+const TEXTURE_DIR = path.resolve(ROOT, 'data', 'assets', 'textures');
+const SOUND_DIR = path.resolve(ROOT, 'data', 'assets', 'sounds');
+const PLACE_DIR = path.resolve(ROOT, 'data', 'places');
+const RENDERER_TEXTURE_DIR = process.env.RENDERER_TEXTURE_DIR
+    ? path.resolve(process.env.RENDERER_TEXTURE_DIR)
+    : path.resolve(ROOT, 'content', 'textures');
+
+const TEXTURE_TYPES = ['texture', 'shirt', 'pants', 'face'];
+
+function ensureDir(dirPath) {
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function getMaxId(dirs) {
+    let maxId = 0;
+    for (const dirPath of dirs) {
+        if (!fs.existsSync(dirPath)) continue;
+        for (const f of fs.readdirSync(dirPath)) {
+            const num = parseInt(path.parse(f).name, 10);
+            if (!isNaN(num) && num > maxId) maxId = num;
+        }
+    }
+    return maxId;
 }
 
 async function renderAndSaveItemThumbnail(itemId, type, textureFileName) {
@@ -49,7 +64,7 @@ async function renderAndSaveItemThumbnail(itemId, type, textureFileName) {
         if (response.ok) {
             const imageBase64 = (await response.text()).trim();
             const thumbDir = path.resolve(ROOT, './data/thumbnails/items');
-            if (!fs.existsSync(thumbDir)) fs.mkdirSync(thumbDir, { recursive: true });
+            ensureDir(thumbDir);
             fs.writeFileSync(path.join(thumbDir, `${itemId}.png`), Buffer.from(imageBase64, 'base64'));
         }
     } catch (err) {
@@ -102,40 +117,42 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
         return res.status(400).json({ error: "Missing needed fields: 'file' or 'type'" });
     }
 
-    let targetDirs = [];
-    if (type === 'sound' || type === 'place') {
-        targetDirs = [path.resolve(ROOT, './data/places')];
-    } else if (['texture', 'shirt', 'pants', 'face'].includes(type)) {
-        targetDirs = getCandidateTextureDirs();
+    let primaryDir;
+    let idDirs;
+    if (type === 'sound') {
+        primaryDir = SOUND_DIR;
+        idDirs = [SOUND_DIR];
+    } else if (type === 'place') {
+        primaryDir = PLACE_DIR;
+        idDirs = [PLACE_DIR];
+    } else if (TEXTURE_TYPES.includes(type)) {
+        primaryDir = TEXTURE_DIR;
+        idDirs = [TEXTURE_DIR, RENDERER_TEXTURE_DIR];
     } else {
         return res.status(400).json({ error: "Invalid type." });
     }
 
-    // Determine max ID across candidate texture dirs or places
-    let maxId = 0;
-    for (const dirPath of targetDirs) {
-        if (fs.existsSync(dirPath)) {
-            const existingFiles = fs.readdirSync(dirPath);
-            for (const f of existingFiles) {
-                const parsedName = path.parse(f).name;
-                const num = parseInt(parsedName, 10);
-                if (!isNaN(num) && num > maxId) {
-                    maxId = num;
-                }
-            }
-        }
-    }
-
-    const newId = maxId + 1;
+    const newId = getMaxId(idDirs) + 1;
     const ext = path.extname(file.originalname);
     const fileName = `${newId}${ext}`;
 
-    for (const dirPath of targetDirs) {
-        try {
-            if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
-            fs.writeFileSync(path.join(dirPath, fileName), file.buffer);
-        } catch (e) {
-            console.error(`Failed to write file to ${dirPath}:`, e.message);
+    try {
+        ensureDir(primaryDir);
+        fs.writeFileSync(path.join(primaryDir, fileName), file.buffer);
+    } catch (e) {
+        console.error(`Failed to write file to ${primaryDir}:`, e.message);
+        return res.status(500).json({ error: "Failed to save the uploaded file." });
+    }
+
+    if (TEXTURE_TYPES.includes(type)) {
+        if (fs.existsSync(RENDERER_TEXTURE_DIR)) {
+            try {
+                fs.writeFileSync(path.join(RENDERER_TEXTURE_DIR, fileName), file.buffer);
+            } catch (e) {
+                console.error(`Failed to copy texture to renderer dir ${RENDERER_TEXTURE_DIR}:`, e.message);
+            }
+        } else {
+            console.warn(`Renderer texture dir not found: ${RENDERER_TEXTURE_DIR} (set RENDERER_TEXTURE_DIR). Thumbnail may fail.`);
         }
     }
 
@@ -190,14 +207,15 @@ router.post('/api/admin/items/delete', requireRole('administrator'), (req, res) 
     const { id } = req.body;
     if (!id) return res.status(400).json({ error: "Missing item ID." });
 
-    let items = readItems();
+    const items = readItems();
     const index = items.findIndex(i => Number(i.id) === Number(id));
     if (index === -1) return res.status(404).json({ error: "Item not found." });
 
     const item = items[index];
     if (item.texture) {
-        for (const dirPath of getCandidateTextureDirs()) {
-            const texPath = path.join(dirPath, item.texture);
+        const textureName = path.basename(String(item.texture));
+        for (const dirPath of [TEXTURE_DIR, RENDERER_TEXTURE_DIR]) {
+            const texPath = path.join(dirPath, textureName);
             if (fs.existsSync(texPath)) {
                 try { fs.unlinkSync(texPath); } catch (_) {}
             }
