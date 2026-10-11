@@ -66,8 +66,6 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
 router.post('/api/login-user', authLimiter, async (req, res) => {
     const { username, password, token: captchaToken } = req.body;
 
-    // Existing native client/server contract: a session token is not a captcha.
-    // Only a server-stored token can authenticate; invalid tokens fail closed.
     if (typeof captchaToken === 'string' && /^[0-9a-f]{64}$/.test(captchaToken)
         && !username && !password) {
         const users = readUsers();
@@ -80,7 +78,6 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
     }
 
 
-    // Native clients omit captcha; supplied browser proofs must still verify.
     const isValidCaptcha = !captchaToken || await verifyTurnstile(captchaToken, req.ip);
     if (!isValidCaptcha) {
         return res.status(400).json({ error: "Please complete the captcha!" });
@@ -110,7 +107,6 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
         return res.status(401).json({ error: "Bad username or password." });
     }
 
-    // bcrypt yields: re-read to preserve concurrent profile/account writes.
     users = readUsers();
     userIndex = users.findIndex(current => current.id === user.id && current.password === user.password);
     if (userIndex === -1) return res.status(401).json({ error: "Bad username or password." });

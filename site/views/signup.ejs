@@ -58,14 +58,14 @@
 
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.value = 'Logging in...';
+                    submitBtn.value = 'Signing up...';
                 }
 
                 try {
                     const formData = new FormData(form);
                     const turnstileResponse = formData.get('cf-turnstile-response');
 
-                    const res = await fetch('/api/login-user', {
+                    const res = await fetch('/api/register-user', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, password, token: turnstileResponse })
