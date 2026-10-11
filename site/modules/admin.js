@@ -16,6 +16,11 @@ router.get('/admin/terminal', (req, res) => {
     res.sendFile(path.join(ROOT, 'admin.html'));
 });
 
+router.get('/admin/terminal.js', (req, res) => {
+    if (!req.user || !roleAtLeast(req.user, 'moderator')) return res.sendStatus(404);
+    res.type('application/javascript').sendFile(path.join(__dirname, 'admin-terminal.js'));
+});
+
 router.get('/renderTest', (req, res) => {
     if (!req.user || !roleAtLeast(req.user, 'administrator')) return res.sendStatus(404);
     res.sendFile(path.join(ROOT, 'renderTest.html'));

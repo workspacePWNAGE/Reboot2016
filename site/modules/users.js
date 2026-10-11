@@ -6,6 +6,13 @@ const profanityFilter = require('./profanityFilter');
 
 const router = express.Router();
 
+function isOwner(req, user) {
+    if (req.user && req.user.id === user.id) return true;
+
+    const match = /^Bearer ([0-9a-f]{64})$/i.exec(req.get('authorization') || '');
+    return !!(match && user.token && match[1].toLowerCase() === user.token);
+}
+
 router.get('/api/get-user-data', (req, res) => {
     const id = req.query.id;
 
@@ -20,12 +27,15 @@ router.get('/api/get-user-data', (req, res) => {
         return res.status(404).json({ error: "User couldn't be found!" });
     }
 
-    res.json({
+    const data = {
         id: user.id,
         username: user.username,
         avatar: user.avatar,
-        banned: isBanned(user)
-    });
+        banned: isBanned(user),
+        bux: user.bux
+    };
+
+    res.json(data);
 });
 
 router.post('/api/update-bio', (req, res) => {

@@ -25,7 +25,10 @@
                 "left_leg": 0,
                 "right_leg": 0
             }
-        }
+        },
+        "token": "c2723431166c57722dda0292e690f18a0b897b3094b5067c51e8525aa921cb85",
+        "bux": 5,
+        "lastDailyBux": "2026-10-11"
     },
     {
         "id": 2,
@@ -84,9 +87,9 @@
                 "right_leg": 0
             }
         },
-        "token": "af99d5ae0e80921bd3fbce134a7b1a07ffb59e2166ae0eb39af79dd1d4527c36",
-        "bux": 250,
-        "lastDailyBux": "2026-10-10",
+        "token": "81debd02195ab7f1d2adfaa4b4e0707e942e030a96740d4cca0ee7beeda04cfd",
+        "bux": 255,
+        "lastDailyBux": "2026-10-11",
         "role": "administrator",
         "bio": "Haio! I'm pwn, the lead developer for the website & api!"
     },

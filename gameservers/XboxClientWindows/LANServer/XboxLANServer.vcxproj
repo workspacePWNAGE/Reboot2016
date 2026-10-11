@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations"><ProjectConfiguration Include="NoOpt|Win32"><Configuration>NoOpt</Configuration><Platform>Win32</Platform></ProjectConfiguration></ItemGroup>
+  <PropertyGroup Label="Globals"><ProjectGuid>{A3F73DD9-9848-476C-A6C7-5930DDDF0BA4}</ProjectGuid><Keyword>Win32Proj</Keyword><WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration"><ConfigurationType>Application</ConfigurationType><PlatformToolset>v140</PlatformToolset><CharacterSet>MultiByte</CharacterSet></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup><OutDir>$(ProjectDir)..\bin\NoOpt\</OutDir><IntDir>$(ProjectDir)obj\NoOpt\</IntDir><TargetName>XboxLANServer</TargetName><LinkIncremental>false</LinkIncremental></PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile><Optimization>Disabled</Optimization><RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary><PrecompiledHeader>NotUsing</PrecompiledHeader><DebugInformationFormat>ProgramDatabase</DebugInformationFormat><FloatingPointModel>Fast</FloatingPointModel><EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet><PreprocessorDefinitions>WIN32;WIN32_LEAN_AND_MEAN;NDEBUG;_WINDOWS;_SECURE_SCL=0;_ITERATOR_DEBUG_LEVEL=0;_NOOPT;BOOST_THREAD_BUILD_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions><ForcedIncludeFiles>windows.h</ForcedIncludeFiles><AdditionalIncludeDirectories>..\..\Rendering\GfxRender;..\..\Rendering\GfxRender\include;..\..\Rendering\GfxRender\freetype\include;..\compat;..\..\App\include;..\..\ClientBase;..\..\Base\include;..\..\Network\include;..\..\Network\include\network;..\..\App\lua-5.1.4\src;..\..\Library\VMProtect\include;..\..\Network;..\..\Network\raknet\Source;..\..\Log\include;..\..\XboxClient;..\..\ClientShared;..\..\Library\boost;..\..\Library\SDL2\include;..\..\App.BulletPhysics;..\..\TBB_4_1\include;..\..\Rendering\GfxBase\include;..\..\Rendering\g3d\include;..\..\Rendering\RbxG3D\include;..\..\Rendering\GfxCore\include;..\..\Rendering\AppDraw\include;..\..\fmod\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+    <Link><IgnoreSpecificDefaultLibraries>libboost_zlib-vc140-mt-x32-1_74.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries><SubSystem>Console</SubSystem><GenerateDebugInformation>true</GenerateDebugInformation><ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers><LargeAddressAware>true</LargeAddressAware><AdditionalLibraryDirectories>..\..\Library\boost\stage\lib;..\..\WindowsClient\libraries;..\..\Library\SDL2\lib\x86;..\..\fmod\win32\lib;..\..\TBB_4_1\lib;..\..\Library\SDK\Lib;..\..\Library\zlib\lib\release;..\..\Library\curl\lib\release;..\..\Library\VMProtect\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories><AdditionalDependencies>..\..\App\bin\NoOpt\App.lib;..\..\Network\bin\NoOpt\Network.lib;..\..\App.BulletPhysics\NoOpt\App.BulletPhysics.lib;..\..\CSG\bin\NoOpt\CSG.lib;..\..\Rendering\AppDraw\bin\NoOpt\AppDraw.lib;..\..\Rendering\GfxBase\bin\NoOpt\RenderLibBase.lib;..\..\Rendering\GfxCore\bin\NoOpt\GfxCore.lib;..\..\Rendering\GfxRender\bin\NoOpt\GfxRender.lib;..\..\Rendering\RbxG3D\bin\Release\RenderLib.lib;..\..\Rendering\g3d\bin\graphics3D\Release\graphics3D.lib;..\..\Base\bin\Release\Base.lib;..\..\Log\bin\Release\Log.lib;..\..\boostlibs\bin\Release\boost.static\boost.static.lib;SDL2.lib;fmod_vc.lib;..\lib\zlib.lib;libcurl.lib;xmllite.lib;shlwapi.lib;legacy_stdio_definitions.lib;ws2_32.lib;Crypt32.lib;winhttp.lib;bcrypt.lib;Wldap32.lib;urlmon.lib;Xinput9_1_0.lib;d3d11.lib;dxgi.lib;dxguid.lib;D3DCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp"/><ClCompile Include="..\GameLibrary.cpp"/><ClCompile Include="LibraryCatalogHost.cpp"/><ClCompile Include="..\..\App\v8datamodel\PlatformService.cpp"/><ClCompile Include="LANAdmission.cpp"/>
+    <ClCompile Include="ServerReplicatorLAN.cpp"/><ClCompile Include="ServerLAN.cpp"/>
+    <ClCompile Include="..\AccountTest.cpp"/><ClCompile Include="..\AuthenticatedAvatar.cpp"/>
+    <ClCompile Include="..\compat\ClientReplicatorOffline.cpp"/>
+    <ClCompile Include="..\compat\RemoteWindows.cpp"/>
+    <ClCompile Include="..\compat\ContentIdOffline.cpp"><AdditionalIncludeDirectories>..\..\Library\w3c-libwww\Library\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+    <ClCompile Include="..\..\App\script\LuaVMDummy.cpp"/>
+    <ClCompile Include="..\..\ClientBase\RenderSettingsItem.cpp"/>
+    <ClCompile Include="..\..\ClientShared\DataModelEmptySerialize.cpp"/>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
