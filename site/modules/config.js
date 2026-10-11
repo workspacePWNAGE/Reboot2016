@@ -14,7 +14,7 @@ module.exports = {
     ROOT,
     PORT: 4451,
     ADMIN_KEYS,
-    TURNSTILE_KEY: "0x4AAAAAAFTaiUqlbXBwoDgcLBo092kVI-k",
+    TURNSTILE_KEY: "0x4AAAAAAFTgCof9AjnW5rOsY4JmOrNzun8",
     colors,
     validColorIds: new Set(colors.map(color => color.id)),
     VALID_BODY_PARTS: ['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg'],

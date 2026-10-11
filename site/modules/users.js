@@ -26,7 +26,7 @@ router.get('/api/get-user-data', (req, res) => {
     if (!user) {
         return res.status(404).json({ error: "User couldn't be found!" });
     }
-
+    
     const data = {
         id: user.id,
         username: user.username,
