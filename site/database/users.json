@@ -72,11 +72,15 @@
             "pants": 0,
             "bodycolors": {
                 "head": 1,
-                "torso": 1,
+                "torso": 21,
                 "left_arm": 1,
                 "right_arm": 1,
                 "left_leg": 1,
-                "right_leg": 1
+                "right_leg": 1,
+                "leftArm": 1,
+                "rightArm": 1,
+                "leftLeg": 1,
+                "rightLeg": 1
             },
             "bodymeshes": {
                 "head": 0,
@@ -85,13 +89,22 @@
                 "right_arm": 0,
                 "left_leg": 0,
                 "right_leg": 0
+            },
+            "items": {
+                "shirt": 1,
+                "pants": 2,
+                "face": null
             }
         },
-        "token": "81debd02195ab7f1d2adfaa4b4e0707e942e030a96740d4cca0ee7beeda04cfd",
+        "token": "520a74e64516375226b066e44e49f67fda5df873f75ea62f4bedcd5d3408c228",
         "bux": 255,
         "lastDailyBux": "2026-10-11",
         "role": "administrator",
-        "bio": "Haio! I'm pwn, the lead developer for the website & api!"
+        "bio": "Haio! I'm pwn, the lead developer for the website & api!",
+        "inventory": [
+            1,
+            2
+        ]
     },
     {
         "id": 4,

@@ -42,5 +42,6 @@ router.get('/api/get-sound', (req, res) => serveAssetById(req, res, './data/asse
 router.get('/api/get-place', (req, res) => serveAssetById(req, res, './data/places', ['.rbxl', '.rbxlx']));
 router.get('/api/get-thumbnail/place', (req, res) => serveAssetById(req, res, './data/thumbnails/places'));
 router.get('/api/get-thumbnail/player', (req, res) => serveAssetById(req, res, './data/thumbnails/players'));
+router.get('/api/get-thumbnail/item', (req, res) => serveAssetById(req, res, './data/thumbnails/items'));
 
 module.exports = router;

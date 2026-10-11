@@ -62,7 +62,7 @@ async function sendCommand(command) {
         return { ok: res.ok, text: res.ok ? JSON.stringify(data) : `Request failed (${res.status}).` };
     } catch (err) {
         if (err && err.name === 'AbortError') {
-            return { ok: false, text: `No answer from the server after ${REQUEST_TIMEOUT_MS / 1000} seconds. The request was cancelled (type 'reconnect' to try again).` };
+            return { ok: false, text: `No answer from the server after ${REQUEST_TIMEOUT_MS / 1000} seconds.` };
         }
         return { ok: false, text: `Couldn't reach the server: ${err && err.message ? err.message : 'network error'}.` };
     }
@@ -168,10 +168,10 @@ cliInput.addEventListener('keydown', async (e) => {
         printLine(`Upload Type: ${inputVal}`);
         const type = inputVal.toLowerCase();
 
-        if (['texture', 'sound', 'place'].includes(type)) {
+        if (['texture', 'sound', 'place', 'shirt', 'pants', 'face'].includes(type)) {
             startFilePick(type);
         } else {
-            printLine('Invalid type. Allowed: texture, sound, place.', 'error');
+            printLine('Invalid type. Allowed: texture, sound, place, shirt, pants, face.', 'error');
             resetPrompt();
         }
         return;
@@ -203,7 +203,7 @@ cliInput.addEventListener('keydown', async (e) => {
 
         if (cmd === 'upload' && result.ok && !/permission/i.test(result.text)) {
             state = 'UPLOAD_TYPE';
-            promptSymbol.innerText = 'Asset type (texture/sound/place): ';
+            promptSymbol.innerText = 'Asset type (texture/sound/place/shirt/pants/face): ';
             cliInput.style.display = 'block';
             cliInput.focus();
             return;

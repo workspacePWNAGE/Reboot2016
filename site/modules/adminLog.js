@@ -2,10 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { DB_DIR } = require('./config');
 
-// One JSON object per line: database/admin-log.jsonl
 const LOG_FILE = path.join(DB_DIR, 'admin-log.jsonl');
 
-/** Records a staff action. Never throws (a logging problem must not break the command). */
 function record(actor, command, output) {
     try {
         fs.mkdirSync(DB_DIR, { recursive: true });
@@ -23,7 +21,6 @@ function record(actor, command, output) {
     }
 }
 
-/** The last `count` entries, oldest first. */
 function recent(count) {
     try {
         const lines = fs.readFileSync(LOG_FILE, 'utf8').split('\n').filter(Boolean);

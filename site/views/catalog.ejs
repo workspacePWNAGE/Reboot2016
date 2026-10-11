@@ -1,0 +1,129 @@
+<head>
+    <%- include('pieces/metadata') %>
+    <title>Reboot 16 | Catalog</title>
+</head>
+
+<body>
+    <%- include('pieces/header') %>
+
+    <div class="content" style="text-align: center;">
+        <h1>Catalog</h1>
+        
+        <form method="get" action="/catalog">
+            <input type="text" name="q" value="<%= q %>" placeholder="Search catalog..." maxlength="50" autocomplete="off">
+            <input type="submit" value="Search">
+            <% if (q) { %>
+                <a href="/catalog">Clear</a>
+            <% } %>
+        </form>
+        <br>
+        
+        <% if (totalPages > 1) { %>
+            <div class="peoplePages">
+                <% if (prevPage) { %><a href="<%= pageUrl(prevPage) %>"><</a><% } else { %><span><</span><% } %>
+
+                <% paginationItems.forEach(item => { %>
+                    <% if (item.ellipsis) { %>
+                        <span>...</span>
+                    <% } else if (item.current) { %>
+                        <strong><%= item.page %></strong>
+                    <% } else { %>
+                        <a href="<%= pageUrl(item.page) %>"><%= item.page %></a>
+                    <% } %>
+                <% }) %>
+
+                <% if (nextPage) { %><a href="<%= pageUrl(nextPage) %>">></a><% } else { %><span>></span><% } %>
+            </div>
+        <% } %>
+
+        <% if (total > 0) { %>
+            <p>Showing <%= from %>-<%= to %> of <%= total %></p>
+        <% } %>
+        <br>
+
+        <% if (catalogItems.length === 0) { %>
+            <p>No items found<%= q ? ` matching "${q}"` : '' %>.</p>
+        <% } else { %>
+            <div class="peopleContainer">
+                <% catalogItems.forEach(item => { %>
+                    <div class="personCard catalogCard" style="cursor: pointer;" 
+                         data-id="<%= item.id %>" 
+                         data-name="<%= item.name %>" 
+                         data-description="<%= item.description || '' %>" 
+                         data-price="<%= item.price %>" 
+                         data-offsale="<%= item.offsale %>">
+                        <img src="/api/get-thumbnail/item?id=<%= item.id %>&v=<%= Date.now() %>">
+                        <span><%= item.name %> | <%= item.price %> Bux</span>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+    </div>
+
+    <div id="purchaseModal" role="dialog" aria-modal="true" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;">
+        <div style="background: rgba(0, 0, 0, 0.634); padding: 20px; max-width: 400px; width: 100%; text-align: center;">
+            <h2 id="modalItemName">Item Name</h2>
+            <img id="modalItemImg" src="" alt="Item preview" style="max-width: 200px; height: auto; margin: 10px 0;">
+            <p id="modalItemDesc" style="font-size: 14px; color: #555;"></p>
+            <p><strong>Price:</strong> <span id="modalItemPrice">0</span> Bux</p>
+            <p id="modalStatus" style="color: red; font-size: 13px;"></p>
+            <br>
+            <button type="button" id="confirmBuyBtn">Buy Item</button>
+            <button type="button" onclick="closePurchaseModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script nonce="<%= nonce %>">
+        let selectedItemId = null;
+
+        document.querySelectorAll('.catalogCard').forEach(card => {
+            card.addEventListener('click', () => {
+                selectedItemId = card.dataset.id;
+                document.getElementById('modalItemName').textContent = card.dataset.name;
+                document.getElementById('modalItemDesc').textContent = card.dataset.description;
+                document.getElementById('modalItemPrice').textContent = card.dataset.price;
+                document.getElementById('modalItemImg').src = `/api/get-thumbnail/item?id=${selectedItemId}&v=` + Date.now();
+                
+                const isOffsale = card.dataset.offsale === 'true';
+                document.getElementById('modalStatus').textContent = isOffsale ? 'This item is offsale.' : '';
+                document.getElementById('confirmBuyBtn').style.display = isOffsale ? 'none' : 'inline-block';
+                document.getElementById('purchaseModal').style.display = 'flex';
+            });
+        });
+
+        function closePurchaseModal() {
+            document.getElementById('purchaseModal').style.display = 'none';
+            selectedItemId = null;
+        }
+
+        document.getElementById('confirmBuyBtn').addEventListener('click', async () => {
+            if (!selectedItemId) return;
+            const status = document.getElementById('modalStatus');
+            status.style.color = 'black';
+            status.textContent = 'Processing purchase...';
+
+            try {
+                const res = await fetch('/api/catalog/buy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ itemId: selectedItemId })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(data.error || 'Purchase failed.');
+                }
+                status.style.color = 'green';
+                status.textContent = 'Success! Item purchased.';
+                setTimeout(() => {
+                    closePurchaseModal();
+                    location.reload();
+                }, 1200);
+            } catch (err) {
+                status.style.color = 'red';
+                status.textContent = err.message;
+            }
+        });
+    </script>
+
+    <%- include('pieces/footer') %>
+</body>

@@ -18,7 +18,7 @@ struct RenderRequest
 
     int size = 512;                 // square output, pixels
     bool hq = true;                 // per-pixel lighting (hq) or per-vertex (lq)
-    std::string face = "face.png";  // file inside <content>/textures, "" = none
+    std::string face = "face.png";  // file inside textureDir, "" = none
     std::string shirt;              // "" = none
     std::string pants;              // "" = none
 
@@ -42,7 +42,7 @@ public:
 
     // Opens the hidden window, compiles the shader, loads the six .obj parts
     // from <contentDir>/fonts and works out the camera. Done once at startup.
-    bool init(const std::string &contentDir, std::string &err);
+    bool init(const std::string &contentDir, const std::string &textureDir, std::string &err);
 
     // Renders one avatar. On success pngBase64 holds the PNG, base64-encoded.
     bool render(const RenderRequest &req, std::string &pngBase64, std::string &err);

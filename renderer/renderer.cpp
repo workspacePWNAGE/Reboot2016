@@ -310,6 +310,7 @@ struct AvatarRenderer::Impl
 {
     bool windowOpen = false;
     std::string dir;
+    std::string textureDir;
     Shader shader = {};
     Vector3 camPos = {};
     Vector3 focus = {};
@@ -336,8 +337,6 @@ struct AvatarRenderer::Impl
         {
             if (p.model.meshCount == 0)
                 continue;
-            // Some raylib versions unload a material's shader inside
-            // UnloadModel(); all six parts share one, so detach it first.
             for (int m = 0; m < p.model.materialCount; m++)
             {
                 p.model.materials[m].shader.id = rlGetShaderIdDefault();
@@ -355,14 +354,15 @@ struct AvatarRenderer::Impl
 AvatarRenderer::AvatarRenderer() : impl_(new Impl) {}
 AvatarRenderer::~AvatarRenderer() = default;
 
-bool AvatarRenderer::init(const std::string &contentDir, std::string &err)
+bool AvatarRenderer::init(const std::string &contentDir, const std::string &textureDir, std::string &err)
 {
     Impl &s = *impl_;
     s.dir = contentDir;
+    s.textureDir = textureDir;
 
     SetTraceLogLevel(LOG_WARNING);
     SetConfigFlags(FLAG_WINDOW_HIDDEN);
-    InitWindow(64, 64, "AvatarRenderer"); // real output size comes from the render texture
+    InitWindow(64, 64, "AvatarRenderer");
     if (!IsWindowReady())
     {
         err = "could not create an OpenGL context";
@@ -381,7 +381,6 @@ bool AvatarRenderer::init(const std::string &contentDir, std::string &err)
     s.useTexLoc = GetShaderLocation(s.shader, "useTexture");
     s.hqLoc = GetShaderLocation(s.shader, "HQ");
 
-    // Meshes: loaded once, kept for the lifetime of the process.
     BoundingBox extents = {};
     bool first = true;
 
@@ -421,16 +420,11 @@ bool AvatarRenderer::init(const std::string &contentDir, std::string &err)
     extents.min = Vector3SubtractValue(extents.min, EXPAND);
     extents.max = Vector3AddValue(extents.max, EXPAND);
 
-    // The character's geometry never changes, so the camera is solved once.
     s.focus = Vector3Scale(Vector3Add(extents.min, extents.max), 0.5f);
     Vector3 camDir = thumbnailDirection(MODEL_LOOK);
     float distance = zoomExtentsDistance(extents, s.focus, camDir);
     s.camPos = Vector3Add(s.focus, Vector3Scale(camDir, distance));
 
-    std::printf("camera pos: %.3f %.3f %.3f  focus: %.3f %.3f %.3f  dist: %.3f  fov: %.1f\n",
-                s.camPos.x, s.camPos.y, s.camPos.z, s.focus.x, s.focus.y, s.focus.z, distance, FOV_DEG);
-
-    // Lighting uniforms are constant too.
     Vector3 lamp0Dir = Vector3Normalize(LAMP0_DIR);
     Vector2 specParams = {SPECULAR, GLOSS};
     Vector4 fogParams = {0.0f, 0.0f, FOG_END, 1.0f / (FOG_END - FOG_START)};
@@ -462,8 +456,7 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
         return false;
     }
 
-    // ---- per-request textures -------------------------------------------
-    const std::string texDir = s.dir + "/textures/";
+    const std::string texDir = s.textureDir + (s.textureDir.empty() || s.textureDir.back() == '/' ? "" : "/");
 
     Texture2D faceTex = {}, shirtTex = {}, pantsTex = {}, torsoTex = {};
     Image shirtImg = {}, pantsImg = {};
@@ -483,7 +476,6 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
     if (hasPants)
         pantsTex = LoadTextureFromImage(pantsImg);
 
-    // Torso = pants layer with the shirt layered on top (same as before).
     if (hasShirt || hasPants)
     {
         int tw = hasShirt ? shirtImg.width : pantsImg.width;
@@ -502,7 +494,6 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
     if (hasPants)
         UnloadImage(pantsImg);
 
-    // Which texture each part gets, in PartId order.
     const Texture2D *partTex[PART_COUNT] = {
         &faceTex,  // head
         &torsoTex, // torso
@@ -512,7 +503,6 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
         &pantsTex, // rleg
     };
 
-    // ---- draw -----------------------------------------------------------
     bool ok = true;
     RenderTexture2D rt = LoadRenderTexture(req.size, req.size);
     if (rt.id == 0)
@@ -575,7 +565,6 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
             MemFree(png);
         }
 
-        // Put the resident models back how we found them.
         for (Part &p : s.parts)
         {
             for (int m = 0; m < p.model.materialCount; m++)

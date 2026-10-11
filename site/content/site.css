@@ -227,6 +227,7 @@ body {
     bottom: 0;
     height: 20%;
     background-image: linear-gradient(to top, rgb(0, 0, 0), rgba(0, 0, 0, 0));
+    z-index: 0;
 }
 
 .content .rightCharacterPanel a {
@@ -407,4 +408,162 @@ body {
 .content .personCard a {
     color: rgb(255, 127, 253);
     text-decoration: none;
+}
+
+#inventoryR6Stage {
+    width: 220px;
+    height: 250px;
+    position: relative;
+    margin: 12px auto;
+}
+
+#inventoryR6Body {
+    position: absolute;
+    width: 144px;
+    height: 204px;
+    left: 50%;
+    top: 12px;
+    transform: translateX(-50%);
+}
+
+.inventoryR6Part {
+    position: absolute;
+    display: block;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.inventoryR6Part:hover {
+    filter: brightness(0.85);
+    outline: 2px solid #1675d1;
+    z-index: 2;
+}
+
+.inventoryR6Part[data-part="head"] {
+    width: 40px;
+    height: 40px;
+    left: 52px;
+    top: 0;
+}
+
+.inventoryR6Part[data-part="torso"] {
+    width: 80px;
+    height: 80px;
+    left: 32px;
+    top: 42px;
+}
+
+.inventoryR6Part[data-part="leftArm"] {
+    width: 40px;
+    height: 80px;
+    left: -10px;
+    top: 42px;
+}
+
+.inventoryR6Part[data-part="rightArm"] {
+    width: 40px;
+    height: 80px;
+    left: 112px;
+    top: 42px;
+}
+
+.inventoryR6Part[data-part="leftLeg"] {
+    width: 40px;
+    height: 80px;
+    left: 32px;
+    top: 124px;
+}
+
+.inventoryR6Part[data-part="rightLeg"] {
+    width: 40px;
+    height: 80px;
+    left: 72px;
+    top: 124px;
+}
+
+#bodyColorModal {
+    display: contents;
+}
+
+#bodyColorModal[hidden] {
+    display: none;
+}
+
+#bodyColorDialog {
+    position: fixed;
+    z-index: 10001;
+    width: 220px;
+    max-width: calc(100vw - 20px);
+    max-height: 260px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 8px;
+    background: #282828;
+    border: 1px solid #818181;
+}
+
+#bodyColorHeader,
+#bodyColorInstructions,
+#bodyColorFooter,
+#activePartTitle,
+#activeColorName {
+    display: none;
+}
+
+#bodyColorEditor {
+    display: block;
+}
+
+#r6Stage {
+    display: none;
+}
+
+#colorPalettePanel {
+    margin: 0;
+}
+
+#colorPalette {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    margin: 0;
+    max-width: none;
+}
+
+#colorPalette {
+    display: grid;
+    grid-template-columns: repeat(5, 32px);
+    grid-auto-rows: 32px;
+    gap: 6px;
+    justify-content: start;
+    max-width: none;
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 2px;
+}
+
+#colorPalette .swatch {
+    display: block;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    flex: none;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #555;
+    cursor: pointer;
+}
+
+#colorPalette .swatch:hover,
+#colorPalette .swatch.selected {
+    border: 2px solid white;
 }

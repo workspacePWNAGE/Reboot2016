@@ -5,11 +5,8 @@
 // OpenGL contexts are bound to one thread, so every render happens on the main
 // thread, one job at a time, in FIFO order. HTTP handler threads only validate
 // the request, put a job in the queue and wait for the result.
-//
-// NOTE: no raylib in this file (see renderer.hpp). Needs httplib.h from
-// https://github.com/yhirose/cpp-httplib next to it.
 
-#define CPPHTTPLIB_THREAD_POOL_COUNT 80 // sync /render calls park a thread each while they wait
+#define CPPHTTPLIB_THREAD_POOL_COUNT 80
 #include "httplib.h"
 
 #include "renderer.hpp"
@@ -46,24 +43,28 @@ using Clock = std::chrono::steady_clock;
 struct Config
 {
     std::string contentDir = "content";
+    std::string textureDir = "";      // empty = defaults to <contentDir>/textures
+    std::string siteUrl = "";         // e.g. http://localhost:3000 for fetching textures via API
     std::string host = "0.0.0.0";
-    int port = 8080;          // one of the ports Cloudflare proxies over plain HTTP
-    std::string apiKey;       // empty = no auth
-    size_t maxQueue = 64;     // jobs waiting (not counting the one rendering)
-    int maxSize = 1024;       // largest accepted ?size=
-    int syncWaitSeconds = 90; // Cloudflare drops proxied requests at 100s
+    int port = 8080;          
+    std::string apiKey;       
+    size_t maxQueue = 64;     
+    int maxSize = 1024;       
+    int syncWaitSeconds = 90; 
     int resultTtlSeconds = 300;
 };
 
 static void usage(const char *argv0)
 {
     std::printf(
-        "usage: %s [--content DIR] [--port N] [--host ADDR] [--key SECRET]\n"
+        "usage: %s [--content DIR] [--texture-dir DIR] [--site-url URL] [--port N] [--host ADDR] [--key SECRET]\n"
         "          [--max-queue N] [--max-size PX]\n"
-        "  --content    folder containing fonts/ and textures/   (default: content)\n"
-        "  --port       listen port                               (default: 8080)\n"
-        "  --key        require this API key (X-Api-Key header or Bearer token);\n"
-        "               can also be set with the RENDER_API_KEY environment variable\n",
+        "  --content      folder containing fonts/ and textures/   (default: content)\n"
+        "  --texture-dir  folder containing local texture cache    (default: <content>/textures)\n"
+        "  --site-url     website base URL for /api/get-texture?id=(default: none)\n"
+        "  --port         listen port                              (default: 8080)\n"
+        "  --key          require this API key (X-Api-Key header or Bearer token);\n"
+        "                 can also be set with the RENDER_API_KEY environment variable\n",
         argv0);
 }
 
@@ -86,6 +87,10 @@ static bool parseArgs(int argc, char **argv, Config &c)
 
         if (a == "--content")
             c.contentDir = v;
+        else if (a == "--texture-dir")
+            c.textureDir = v;
+        else if (a == "--site-url")
+            c.siteUrl = v;
         else if (a == "--host")
             c.host = v;
         else if (a == "--port")
@@ -102,7 +107,53 @@ static bool parseArgs(int argc, char **argv, Config &c)
             return false;
         }
     }
+
+    if (c.textureDir.empty())
+    {
+        c.textureDir = (fs::path(c.contentDir) / "textures").string();
+    }
+
     return true;
+}
+
+// ---------------------------------------------------------------------------
+// Texture Fetcher Helper
+// ---------------------------------------------------------------------------
+
+static void ensureTextureExists(const Config &cfg, const std::string &textureName)
+{
+    if (textureName.empty() || textureName == "none")
+        return;
+
+    fs::path texPath = fs::path(cfg.textureDir) / textureName;
+    if (fs::exists(texPath))
+        return;
+
+    if (cfg.siteUrl.empty())
+        return;
+
+    std::string stem = fs::path(textureName).stem().string();
+    if (stem.empty())
+        return;
+
+    try
+    {
+        httplib::Client cli(cfg.siteUrl);
+        cli.set_connection_timeout(5);
+        std::string endpoint = "/api/get-texture?id=" + stem;
+        auto res = cli.Get(endpoint.c_str());
+        if (res && res->status == 200 && !res->body.empty())
+        {
+            fs::create_directories(cfg.textureDir);
+            std::ofstream f(texPath, std::ios::binary);
+            f.write(res->body.data(), res->body.size());
+            std::printf("Fetched texture %s from %s%s\n", textureName.c_str(), cfg.siteUrl.c_str(), endpoint.c_str());
+        }
+    }
+    catch (const std::exception &e)
+    {
+        std::printf("Failed to fetch texture %s from site URL: %s\n", textureName.c_str(), e.what());
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -137,13 +188,11 @@ struct Job
     std::string id;
     RenderRequest req;
 
-    // Guards everything below. Lock order rule: never call a JobQueue method
-    // while holding a job's mutex (the queue locks job mutexes itself).
     std::mutex m;
     std::condition_variable cv;
     JobState state = JobState::Queued;
-    std::string image; // base64 PNG once Done
-    std::string error; // once Failed
+    std::string image; 
+    std::string error; 
     Clock::time_point finishedAt;
 };
 
@@ -157,7 +206,6 @@ public:
         rng_.seed(seq);
     }
 
-    // nullptr when the queue is full or the server is shutting down.
     std::shared_ptr<Job> submit(const RenderRequest &req)
     {
         std::lock_guard<std::mutex> lk(m_);
@@ -188,7 +236,6 @@ public:
         jobs_.erase(id);
     }
 
-    // 1-based place in line, 0 if not waiting.
     int position(const std::shared_ptr<Job> &job)
     {
         std::lock_guard<std::mutex> lk(m_);
@@ -204,7 +251,6 @@ public:
         return pending_.size();
     }
 
-    // Render thread: wait up to waitMs for the next job. nullptr on timeout.
     std::shared_ptr<Job> next(int waitMs)
     {
         std::unique_lock<std::mutex> lk(m_);
@@ -216,7 +262,7 @@ public:
         auto job = pending_.front();
         pending_.pop_front();
         {
-            std::lock_guard<std::mutex> jl(job->m); // m_ -> job->m is the allowed order
+            std::lock_guard<std::mutex> jl(job->m);
             job->state = JobState::Running;
         }
         return job;
@@ -235,7 +281,6 @@ public:
         (ok ? completed_ : failed_)++;
     }
 
-    // Fail everything still waiting so blocked HTTP handlers return promptly.
     void shutdown()
     {
         std::vector<std::shared_ptr<Job>> dropped;
@@ -256,7 +301,7 @@ public:
 private:
     static constexpr size_t kMaxFinished = 256;
 
-    std::string makeId() // m_ held
+    std::string makeId()
     {
         static const char hex[] = "0123456789abcdef";
         std::string id;
@@ -269,8 +314,7 @@ private:
         return id;
     }
 
-    // Drop finished jobs nobody collected (older than the TTL, or beyond the cap).
-    void prune() // m_ held
+    void prune()
     {
         auto now = Clock::now();
         std::vector<std::pair<Clock::time_point, std::string>> finished;
@@ -327,21 +371,11 @@ static std::string jsonQuote(const std::string &s)
     {
         switch (c)
         {
-        case '"':
-            o += "\\\"";
-            break;
-        case '\\':
-            o += "\\\\";
-            break;
-        case '\n':
-            o += "\\n";
-            break;
-        case '\r':
-            o += "\\r";
-            break;
-        case '\t':
-            o += "\\t";
-            break;
+        case '"': o += "\\\""; break;
+        case '\\': o += "\\\\"; break;
+        case '\n': o += "\\n"; break;
+        case '\r': o += "\\r"; break;
+        case '\t': o += "\\t"; break;
         default:
             if (c < 0x20)
             {
@@ -361,7 +395,6 @@ static std::string errorJson(const std::string &msg)
     return "{\"error\":" + jsonQuote(msg) + "}";
 }
 
-// Only plain file names inside <content>/textures - never paths.
 static bool validFileName(const std::string &n)
 {
     if (n.empty() || n.size() > 64 || n[0] == '.' || n.find("..") != std::string::npos)
@@ -386,7 +419,6 @@ static bool parseHexColor(std::string v, unsigned &out)
     return true;
 }
 
-// Works for ?query=strings and form-encoded POST bodies alike (httplib merges both).
 static bool parseRequest(const httplib::Request &req, const Config &cfg, RenderRequest &out, std::string &err)
 {
     if (req.has_param("size"))
@@ -419,7 +451,7 @@ static bool parseRequest(const httplib::Request &req, const Config &cfg, RenderR
     auto texture = [&](const char *key, std::string &dst) -> bool
     {
         if (!req.has_param(key))
-            return true; // keep the default
+            return true;
         std::string v = req.get_param_value(key);
         if (v.empty() || v == "none")
         {
@@ -431,7 +463,11 @@ static bool parseRequest(const httplib::Request &req, const Config &cfg, RenderR
             err = std::string("invalid ") + key + " file name";
             return false;
         }
-        if (!fs::exists(fs::path(cfg.contentDir) / "textures" / v))
+
+        // Attempt to fetch from site URL if missing locally
+        ensureTextureExists(cfg, v);
+
+        if (!fs::exists(fs::path(cfg.textureDir) / v))
         {
             err = std::string(key) + " texture not found: " + v;
             return false;
@@ -470,7 +506,7 @@ static std::string jobJson(JobQueue &queue, const std::shared_ptr<Job> &job)
 
     std::string j = "{\"jobId\":" + jsonQuote(job->id) + ",\"status\":\"" + stateName(st) + "\"";
     if (st == JobState::Queued)
-        j += ",\"position\":" + std::to_string(queue.position(job)); // job->m released above
+        j += ",\"position\":" + std::to_string(queue.position(job));
     if (st == JobState::Done)
         j += ",\"image\":" + jsonQuote(image);
     if (st == JobState::Failed)
@@ -499,10 +535,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // OpenGL lives on this (the main) thread for the whole run.
     AvatarRenderer renderer;
     std::string err;
-    if (!renderer.init(cfg.contentDir, err))
+    if (!renderer.init(cfg.contentDir, cfg.textureDir, err))
     {
         std::printf("renderer init failed: %s\n", err.c_str());
         return 1;
@@ -511,7 +546,6 @@ int main(int argc, char **argv)
     JobQueue queue(cfg.maxQueue, cfg.resultTtlSeconds);
     httplib::Server svr;
     svr.set_default_headers({{"Cache-Control", "no-store"}});
-
         
     svr.set_pre_routing_handler([&](const httplib::Request &req, httplib::Response &res) -> httplib::Server::HandlerResponse
     {
@@ -533,9 +567,6 @@ int main(int argc, char **argv)
         return httplib::Server::HandlerResponse::Handled;
     });
 
-
-    // GET /  (or /test)  -> the test page, <content>/test.html. Read from disk on every request,
-    // so you can edit it without restarting. Not behind the API key: the page asks for the key itself.
     auto servePage = [&](const httplib::Request &, httplib::Response &res)
     {
         std::ifstream f(fs::path(cfg.contentDir) / "test.html", std::ios::binary);
@@ -551,12 +582,11 @@ int main(int argc, char **argv)
     svr.Get("/", servePage);
     svr.Get("/test", servePage);
 
-    // GET /textures -> {"files":["face.png","shirt1.png"]}  the names face/shirt/pants accept
     svr.Get("/textures", [&](const httplib::Request &, httplib::Response &res)
             {
         std::vector<std::string> names;
         std::error_code ec;
-        for (const auto &entry : fs::directory_iterator(fs::path(cfg.contentDir) / "textures", ec))
+        for (const auto &entry : fs::directory_iterator(fs::path(cfg.textureDir), ec))
         {
             std::string n = entry.path().filename().string();
             if (entry.is_regular_file(ec) && validFileName(n))
@@ -569,10 +599,6 @@ int main(int argc, char **argv)
             j += (i ? "," : "") + jsonQuote(names[i]);
         res.set_content(j + "]}", "application/json"); });
 
-    // GET|POST /render?size=512&shirt=a.png&head=F5CD30
-    //   Waits its turn in the queue and answers with the base64 PNG as text/plain.
-    //   If the wait would outlive Cloudflare's timeout it answers 202 with a jobId
-    //   instead, and the render carries on - poll GET /jobs/<id>.
     auto renderHandler = [&](const httplib::Request &req, httplib::Response &res)
     {
         RenderRequest rr;
@@ -616,7 +642,7 @@ int main(int argc, char **argv)
             image = std::move(job->image);
             error = job->error;
         }
-        queue.forget(job->id); // delivered - no need to keep it around
+        queue.forget(job->id);
 
         if (ok)
             res.set_content(std::move(image), "text/plain");
@@ -629,7 +655,6 @@ int main(int argc, char **argv)
     svr.Get("/render", renderHandler);
     svr.Post("/render", renderHandler);
 
-    // POST /jobs?...   -> 202 {"jobId":"..","status":"queued","position":N}
     svr.Post("/jobs", [&](const httplib::Request &req, httplib::Response &res)
              {
         RenderRequest rr;
@@ -652,7 +677,6 @@ int main(int argc, char **argv)
         res.set_header("Location", "/jobs/" + job->id);
         res.set_content(jobJson(queue, job), "application/json"); });
 
-    // GET /jobs/<id>   -> {"jobId":"..","status":"queued|running|done|failed", ...}
     svr.Get(R"(/jobs/([0-9a-f]{32}))", [&](const httplib::Request &req, httplib::Response &res)
             {
         auto job = queue.find(req.matches[1]);
@@ -675,10 +699,10 @@ int main(int argc, char **argv)
     std::signal(SIGINT, onSignal);
     std::signal(SIGTERM, onSignal);
 
-    std::printf("AvatarRenderer listening on http://%s:%d  (queue limit %zu, auth %s)\n",
-                cfg.host.c_str(), cfg.port, cfg.maxQueue, cfg.apiKey.empty() ? "off" : "on");
+    std::printf("AvatarRenderer listening on http://%s:%d  (content: %s, textures: %s, siteUrl: %s, auth %s)\n",
+                cfg.host.c_str(), cfg.port, cfg.contentDir.c_str(), cfg.textureDir.c_str(), 
+                cfg.siteUrl.empty() ? "none" : cfg.siteUrl.c_str(), cfg.apiKey.empty() ? "off" : "on");
 
-    // ---- render loop: one job at a time, in arrival order --------------------
     while (!g_stop)
     {
         renderer.pump();

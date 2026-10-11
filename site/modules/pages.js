@@ -1,12 +1,15 @@
 const express = require('express');
 const { VIEWS_DIR } = require('./config');
 const { getPeoplePageData } = require('./people');
+const { getCatalogPageData } = require('./catalogHelper');
 const { readUsers } = require('./database');
 
 const PAGES = [
     { route: '/', view: 'index' },
     { route: '/verity', view: 'verity' },
-    { route: '/people', view: 'people', data: (req) => getPeoplePageData(req.query) },
+    { route: '/info', view: 'info' },
+    { route: '/people', view: 'people', data: req => getPeoplePageData(req.query) },
+    { route: '/catalog', view: 'catalog', data: req => getCatalogPageData(req.query) }
 ];
 
 module.exports = function mountPages(app) {
@@ -16,9 +19,7 @@ module.exports = function mountPages(app) {
     const router = express.Router();
 
     const redirectIfLoggedIn = (req, res, next) => {
-        if (req.user) {
-            return res.redirect('/');
-        }
+        if (req.user) return res.redirect('/');
         next();
     };
 
@@ -31,15 +32,28 @@ module.exports = function mountPages(app) {
     });
 
     router.get('/settings', (req, res) => {
-        if (!req.user) {
-            return res.redirect('/login');
+        if (!req.user) return res.redirect('/signup');
+
+        const user = readUsers().find(u => u.id === req.user.id);
+
+        res.render('settings', {
+            query: req.query,
+            bio: user ? user.bio || '' : ''
+        });
+    });
+
+    router.get('/character', (req, res) => {
+        if (!req.user) return res.redirect('/signup');
+
+        const user = readUsers().find(u => u.id === req.user.id);
+
+        if (!user) {
+            return res.redirect('/signup');
         }
-        const users = readUsers();
-        const user = users.find(u => u.id === req.user.id);
-        
-        res.render('settings', { 
-            query: req.query, 
-            bio: user ? (user.bio || '') : '' 
+
+        res.render('character', {
+            query: req.query,
+            user
         });
     });
 

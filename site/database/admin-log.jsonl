@@ -1,1 +1,27 @@
 {"time":"2026-10-10T19:01:56.438Z","actorId":1,"actor":"Reboot2016","role":"administrator","command":"give-bux 1 100","result":"Success: Gave 100 Bux to Reboot2016 (ID: 1). New balance: 105."}
+{"time":"2026-10-11T04:55:54.560Z","actorId":3,"actor":"pwn","role":"administrator","command":"upload shirt","result":"Success: uploaded shirt as asset 1 (Catalog Item ID: 1)"}
+{"time":"2026-10-11T05:03:24.497Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-delete 1","result":"Success: Deleted item ID 1."}
+{"time":"2026-10-11T05:09:30.901Z","actorId":3,"actor":"pwn","role":"administrator","command":"upload shirt","result":"Success: uploaded shirt as asset 2 (Catalog Item ID: 1)"}
+{"time":"2026-10-11T05:09:44.180Z","actorId":3,"actor":"pwn","role":"administrator","command":"upload pants","result":"Success: uploaded pants as asset 3 (Catalog Item ID: 2)"}
+{"time":"2026-10-11T05:09:54.203Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-edit 1","result":"Error: Invalid syntax. Usage: item-edit <itemid> <name|description|price|offsale|renderid> <value>"}
+{"time":"2026-10-11T05:10:10.923Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-edit 1 name Outline w/ Red Braces","result":"Success: Updated item 1 (name)."}
+{"time":"2026-10-11T05:11:08.104Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-delete 1","result":"Success: Deleted item ID 1."}
+{"time":"2026-10-11T05:12:08.344Z","actorId":3,"actor":"pwn","role":"administrator","command":"upload shirt","result":"Success: uploaded shirt as asset 4 (Catalog Item ID: 3)"}
+{"time":"2026-10-11T05:13:30.636Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-edit 3","result":"Error: Invalid syntax. Usage: item-edit <itemid> <name|description|price|offsale|renderid> <value>"}
+{"time":"2026-10-11T05:13:53.611Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-edit 3 name [+] Outline w/ Red Braces","result":"Success: Updated item 3 (name)."}
+{"time":"2026-10-11T05:14:38.526Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-edit 2 name [-] Outline w/ Red Braces","result":"Success: Updated item 2 (name)."}
+{"time":"2026-10-11T05:23:35.776Z","actorId":3,"actor":"pwn","role":"administrator","command":"rerender-all","result":"Error during bulk re-render: {\"error\":\"pants texture not found: 3.png\"}"}
+{"time":"2026-10-11T05:27:09.107Z","actorId":3,"actor":"pwn","role":"administrator","command":"rerender-all","result":"Error during bulk re-render: {\"error\":\"pants texture not found: 3.png\"}"}
+{"time":"2026-10-11T05:27:40.054Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-delete 1","result":"Error: Item ID 1 not found."}
+{"time":"2026-10-11T05:27:42.131Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-delete 2","result":"Success: Deleted item ID 2 along with its texture and thumbnail."}
+{"time":"2026-10-11T05:27:43.660Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-delete 3","result":"Success: Deleted item ID 3 along with its texture and thumbnail."}
+{"time":"2026-10-11T05:27:44.811Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-delete 4","result":"Error: Item ID 4 not found."}
+{"time":"2026-10-11T05:27:46.787Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-delete 5","result":"Error: Item ID 5 not found."}
+{"time":"2026-10-11T05:28:04.643Z","actorId":3,"actor":"pwn","role":"administrator","command":"upload shirt","result":"Success: uploaded shirt as asset 1 (Catalog Item ID: 1)"}
+{"time":"2026-10-11T05:28:09.157Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-edit 1 name","result":"Error: Invalid syntax. Usage: item-edit <itemid> <name|description|price|offsale|renderid> <value>"}
+{"time":"2026-10-11T05:28:32.814Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-edit 1 name [+] Outline Shirt W/ Red Braces","result":"Success: Updated item 1 (name)."}
+{"time":"2026-10-11T05:28:43.775Z","actorId":3,"actor":"pwn","role":"administrator","command":"upload pants","result":"Success: uploaded pants as asset 2 (Catalog Item ID: 2)"}
+{"time":"2026-10-11T05:28:55.894Z","actorId":3,"actor":"pwn","role":"administrator","command":"item-edit 2 name [-] Outline Pants W/ Red Braces","result":"Success: Updated item 2 (name)."}
+{"time":"2026-10-11T05:29:44.556Z","actorId":3,"actor":"pwn","role":"administrator","command":"give-item 3 1","result":"Success: Gave item ID 1 to pwn."}
+{"time":"2026-10-11T05:29:45.501Z","actorId":3,"actor":"pwn","role":"administrator","command":"give-item 3 2","result":"Success: Gave item ID 2 to pwn."}
+{"time":"2026-10-11T05:44:22.412Z","actorId":3,"actor":"pwn","role":"administrator","command":"rerender-all","result":"Success: Re-rendered 42 user thumbnails and 2 item thumbnails."}

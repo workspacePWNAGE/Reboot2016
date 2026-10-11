@@ -1,0 +1,571 @@
+<head>
+    <%- include('pieces/metadata') %>
+    <title>Reboot 16 | Character</title>
+</head>
+
+<body>
+    <%- include('pieces/header') %>
+
+    <div class="content" style="text-align: center;">
+        <h1>Character</h1>
+
+        <div class="characterPanels">
+            <div class="leftCharacterPanel">
+                <h2>Preview</h2>
+
+                <img
+                    id="characterPreview"
+                    src="/api/get-thumbnail/player?id=<%= user.id %>&v=<%= Date.now() %>"
+                    alt="Character preview"
+                >
+
+                <p id="characterStatus">Loading character...</p>
+
+                <p>
+                    <a href="#" id="refreshCharacter">Re-render</a>
+                </p>
+            </div>
+
+            <div class="rightPanelsContainer">
+                <div class="rightCharacterPanel">
+                    <h2>Inventory</h2>
+
+                    <div class="item" style="width: 100px; float: left; text-align: left; padding-left: 15px;">
+                        <br>
+
+                        <a href="#" data-tab="colors">Body Colors</a>
+                        <br><br>
+
+                        <a href="#" data-tab="hats">Hats</a>
+                        <br><br>
+
+                        <a href="#" data-tab="shirts">Shirts</a>
+                        <br><br>
+
+                        <a href="#" data-tab="tshirts">T-Shirts</a>
+                        <br><br>
+
+                        <a href="#" data-tab="pants">Pants</a>
+                        <br><br>
+
+                        <a href="#" data-tab="royals">Royals</a>
+
+                        <br><br>
+                    </div>
+
+                    <div id="inventoryContent" style="text-align: left; margin-left: 125px;">
+                        Loading inventory...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bodyColorModal" role="dialog" aria-modal="true" aria-labelledby="bodyColorTitle" hidden>
+        <div id="bodyColorDialog">
+            <div id="bodyColorHeader">
+                <h2 id="bodyColorTitle">Body Colors</h2>
+                <button type="button" id="closeColorPicker" aria-label="Close color picker">×</button>
+            </div>
+
+            <p id="bodyColorInstructions">Select a body part, then choose a color!</p>
+
+            <div id="bodyColorEditor">
+                <div id="r6Stage" aria-label="Interactive R6 character">
+                    <button type="button" class="r6Part" data-part="head" aria-label="Head"></button>
+                    <button type="button" class="r6Part" data-part="leftArm" aria-label="Left arm"></button>
+                    <button type="button" class="r6Part" data-part="rightArm" aria-label="Right arm"></button>
+                    <button type="button" class="r6Part" data-part="torso" aria-label="Torso"></button>
+                    <button type="button" class="r6Part" data-part="leftLeg" aria-label="Left leg"></button>
+                    <button type="button" class="r6Part" data-part="rightLeg" aria-label="Right leg"></button>
+                </div>
+
+                <div id="colorPalettePanel">
+                    <h3 id="activePartTitle">Select a body part</h3>
+                    <p id="activeColorName">Choose a part on the character.</p>
+                    <div id="colorPalette"></div>
+                </div>
+            </div>
+
+            <div id="bodyColorFooter">
+                <span id="bodyColorHint">Changes save and update automatically.</span>
+                <button type="button" id="doneColorPicker">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script nonce="<%= nonce %>">
+        (() => {
+            const preview = document.getElementById('characterPreview');
+            const status = document.getElementById('characterStatus');
+            const content = document.getElementById('inventoryContent');
+            const modal = document.getElementById('bodyColorModal');
+            const palette = document.getElementById('colorPalette');
+            const activePartTitle = document.getElementById('activePartTitle');
+            const activeColorName = document.getElementById('activeColorName');
+            const closePickerButton = document.getElementById('closeColorPicker');
+            const donePickerButton = document.getElementById('doneColorPicker');
+            const refreshLink = document.getElementById('refreshCharacter');
+            const partButtons = [...document.querySelectorAll('.r6Part')];
+
+            const parts = [
+                ['head', 'Head'],
+                ['torso', 'Torso'],
+                ['leftArm', 'Left Arm'],
+                ['rightArm', 'Right Arm'],
+                ['leftLeg', 'Left Leg'],
+                ['rightLeg', 'Right Leg']
+            ];
+
+            const rendererParts = {
+                head: 'head',
+                torso: 'torso',
+                leftArm: 'larm',
+                rightArm: 'rarm',
+                leftLeg: 'lleg',
+                rightLeg: 'rleg'
+            };
+
+            let avatar = {};
+            let colors = [];
+            let selectedTab = 'colors';
+            let activePart = 'head';
+            let renderTimeout;
+            let rendering = false;
+            let renderAgain = false;
+
+            async function request(url, options = {}) {
+                const response = await fetch(url, {
+                    credentials: 'same-origin',
+                    ...options,
+                    headers: {
+                        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+                        ...(options.headers || {})
+                    }
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (response.status === 401) {
+                    window.location.assign('/signup');
+                    throw new Error('Please sign in.');
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Request failed.');
+                }
+
+                return data;
+            }
+
+            function setStatus(message) {
+                status.textContent = message;
+            }
+
+            function getColor(colorId) {
+                return colors.find(color => String(color.id) === String(colorId));
+            }
+
+            function getPartColor(part) {
+                const color = getColor(avatar.bodycolors?.[part]);
+                return color?.hex || '#F2F3F3';
+            }
+
+            function updateR6Colors() {
+                for (const button of partButtons) {
+                    button.style.backgroundColor = getPartColor(button.dataset.part);
+                    button.classList.toggle('selected', button.dataset.part === activePart);
+                    button.setAttribute(
+                        'aria-pressed',
+                        String(button.dataset.part === activePart)
+                    );
+                }
+            }
+
+            async function saveAndRender() {
+                setStatus('Saving and updating...');
+
+                try {
+                    const bodycolorsToSend = {};
+                    for (const [part] of parts) {
+                        if (avatar.bodycolors[part] !== undefined) {
+                            bodycolorsToSend[part] = avatar.bodycolors[part];
+                        }
+                    }
+
+                    const data = await request('/api/character/colors', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            bodycolors: bodycolorsToSend
+                        })
+                    });
+
+                    if (data.avatar) {
+                        avatar = data.avatar;
+                        if (!avatar.bodycolors) {
+                            avatar.bodycolors = {};
+                        }
+                    }
+
+                    updateR6Colors();
+                    renderTab();
+                    await renderCharacter();
+                } catch (error) {
+                    setStatus(error.message);
+                }
+            }
+
+            function markChanged() {
+                clearTimeout(renderTimeout);
+                renderTimeout = setTimeout(saveAndRender, 350);
+            }
+
+            function openColorPicker(part = activePart) {
+                activePart = part;
+                modal.hidden = false;
+                renderPalette();
+                updateR6Colors();
+                closePickerButton.focus();
+            }
+
+            function closeColorPicker() {
+                modal.hidden = true;
+            }
+
+            function renderPalette() {
+                const partInfo = parts.find(([part]) => part === activePart);
+                activePartTitle.textContent = partInfo ? partInfo[1] : 'Body Part';
+
+                const currentColor = getColor(avatar.bodycolors?.[activePart]);
+                activeColorName.textContent = currentColor
+                    ? currentColor.name + ' · ' + currentColor.hex
+                    : 'Select a color';
+
+                palette.replaceChildren();
+
+                for (const color of colors) {
+                    const swatch = document.createElement('button');
+                    const selected = String(avatar.bodycolors?.[activePart]) === String(color.id);
+
+                    swatch.type = 'button';
+                    swatch.className = 'colorSwatch';
+                    swatch.style.backgroundColor = color.hex;
+                    swatch.title = color.name + ' (' + color.hex + ')';
+                    swatch.setAttribute('aria-label', color.name);
+                    swatch.setAttribute('aria-pressed', String(selected));
+
+                    if (selected) {
+                        swatch.classList.add('selected');
+                    }
+
+                    swatch.addEventListener('click', () => {
+                        if (!avatar.bodycolors) {
+                            avatar.bodycolors = {};
+                        }
+
+                        avatar.bodycolors[activePart] = color.id;
+
+                        updateR6Colors();
+                        renderPalette();
+                        markChanged();
+                    });
+
+                    palette.appendChild(swatch);
+                }
+            }
+            
+            function renderColors() {
+                content.replaceChildren();
+
+                const stage = document.createElement('div');
+                stage.id = 'inventoryR6Stage';
+
+                const body = document.createElement('div');
+                body.id = 'inventoryR6Body';
+
+                for (const [part, label] of parts) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'inventoryR6Part';
+                    button.dataset.part = part;
+                    button.title = label;
+                    button.setAttribute('aria-label', 'Change ' + label.toLowerCase());
+                    button.style.backgroundColor = getPartColor(part);
+
+                    button.addEventListener('click', (event) => {
+                        activePart = part;
+
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        const dialog = document.getElementById('bodyColorDialog');
+
+                        openColorPicker(part);
+
+                        dialog.style.position = 'fixed';
+                        dialog.style.left = '0px';
+                        dialog.style.top = '0px';
+
+                        requestAnimationFrame(() => {
+                            const width = dialog.offsetWidth;
+                            const height = dialog.offsetHeight;
+
+                            let left = rect.right + 10;
+                            let top = rect.top;
+
+                            if (left + width > window.innerWidth - 10) {
+                                left = rect.left - width - 10;
+                            }
+
+                            left = Math.max(10, Math.min(left, window.innerWidth - width - 10));
+                            top = Math.max(10, Math.min(top, window.innerHeight - height - 10));
+
+                            dialog.style.left = left + 'px';
+                            dialog.style.top = top + 'px';
+                        });
+                    });
+
+                    body.appendChild(button);
+                }
+
+                stage.appendChild(body);
+                content.appendChild(stage);
+            }
+
+            async function renderItemTab(itemType) {
+                content.replaceChildren();
+                const loading = document.createElement('p');
+                loading.textContent = `Loading ${itemType}s...`;
+                content.appendChild(loading);
+
+                try {
+                    const res = await request(`/api/character/items?type=${itemType}`);
+                    content.replaceChildren();
+
+                    const items = res.items || [];
+                    if (items.length === 0) {
+                        const p = document.createElement('p');
+                        p.textContent = `No ${itemType}s available in the catalog.`;
+                        content.appendChild(p);
+                        return;
+                    }
+
+                    const listDiv = document.createElement('div');
+                    listDiv.style.textAlign = 'left';
+
+                    for (const item of items) {
+                        const card = document.createElement('div');
+                        card.className = 'item';
+                        card.style.cursor = 'pointer';
+
+                        const isEquipped = avatar.items && Number(avatar.items[itemType]) === Number(item.id);
+                        if (isEquipped) {
+                            card.style.outline = '2px solid rgb(255, 127, 253)';
+                        }
+
+                        const img = document.createElement('img');
+                        img.src = `/api/get-thumbnail/item?id=${item.id}&v=` + Date.now();
+                        img.alt = item.name;
+                        img.onerror = () => {
+                            img.onerror = null;
+                            img.src = `/api/get-texture?id=${item.id}`;
+                        };
+                        card.appendChild(img);
+
+                        const overlay = document.createElement('div');
+                        overlay.className = 'nameOverlay';
+                        card.appendChild(overlay);
+
+                        const title = document.createElement('strong');
+                        title.textContent = item.name;
+                        title.style.display = 'block';
+                        title.style.fontSize = '11px';
+                        title.style.padding = '2px';
+                        title.style.position = 'relative';
+                        title.style.zIndex = '2';
+                        card.appendChild(title);
+
+                        card.addEventListener('click', async () => {
+                            await equipItem(itemType, isEquipped ? null : item.id);
+                        });
+
+                        listDiv.appendChild(card);
+                    }
+                    content.appendChild(listDiv);
+                } catch (err) {
+                    content.replaceChildren();
+                    const p = document.createElement('p');
+                    p.textContent = `Failed to load ${itemType}s: ${err.message}`;
+                    content.appendChild(p);
+                }
+            }
+
+            async function equipItem(type, itemId) {
+                setStatus('Updating item...');
+                try {
+                    const res = await request('/api/character/equip', {
+                        method: 'POST',
+                        body: JSON.stringify({ type, itemId })
+                    });
+                    if (res.avatar) {
+                        avatar = res.avatar;
+                    }
+                    renderTab();
+                    await renderCharacter();
+                    setStatus('Character updated!');
+                } catch (err) {
+                    setStatus(err.message);
+                }
+            }
+
+            function renderTab() {
+                if (selectedTab === 'colors') {
+                    renderColors();
+                    return;
+                }
+                if (['shirts', 'pants', 'faces'].includes(selectedTab) || selectedTab === 'shirt' || selectedTab === 'pants' || selectedTab === 'face') {
+                    let t = selectedTab;
+                    if (t === 'shirts') t = 'shirt';
+                    if (t === 'pants') t = 'pants';
+                    if (t === 'faces') t = 'face';
+                    renderItemTab(t);
+                    return;
+                }
+
+                content.replaceChildren();
+                const message = document.createElement('p');
+                const names = {
+                    hats: 'Hats',
+                    shirts: 'Shirts',
+                    tshirts: 'T-Shirts',
+                    pants: 'Pants',
+                    royals: 'Royals'
+                };
+
+                message.textContent = (names[selectedTab] || selectedTab) +
+                    ' inventory is not connected to an item catalog yet.';
+
+                content.appendChild(message);
+            }
+
+            document.addEventListener('pointerdown', (event) => {
+                const modal = document.getElementById('bodyColorModal');
+                const dialog = document.getElementById('bodyColorDialog');
+
+                if (modal.hidden) return;
+
+                if (dialog.contains(event.target)) return;
+
+                if (event.target.closest('.inventoryR6Part')) return;
+
+                closeColorPicker();
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeColorPicker();
+                }
+            });
+
+            async function renderCharacter() {
+                if (rendering) {
+                    renderAgain = true;
+                    return;
+                }
+
+                rendering = true;
+                renderAgain = false;
+                setStatus('Rendering preview...');
+
+                try {
+                    const data = await request('/api/character/render', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            size: 512,
+                            quality: 'hq',
+                            bodycolors: { ...(avatar.bodycolors || {}) }
+                        })
+                    });
+
+                    if (!data.image) {
+                        throw new Error('The renderer did not return an image.');
+                    }
+
+                    preview.src = `/api/get-thumbnail/player?id=<%= user.id %>&v=` + Date.now();
+                    setStatus('Preview updated.');
+                } catch (error) {
+                    setStatus(error.message);
+                } finally {
+                    rendering = false;
+
+                    if (renderAgain) {
+                        renderAgain = false;
+                        renderCharacter();
+                    }
+                }
+            }
+
+            async function loadCharacter() {
+                try {
+                    const data = await request('/api/character/data');
+
+                    avatar = data.avatar || {};
+                    colors = data.colors || [];
+
+                    if (!avatar.bodycolors) {
+                        avatar.bodycolors = {};
+                    }
+                    if (!avatar.items) {
+                        avatar.items = {};
+                    }
+
+                    renderTab();
+                    updateR6Colors();
+                    await renderCharacter();
+                } catch (error) {
+                    setStatus(error.message);
+                }
+            }
+
+            if (refreshLink) {
+                refreshLink.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    renderCharacter();
+                });
+            }
+
+            document.querySelectorAll('[data-tab]').forEach(link => {
+                link.addEventListener('click', event => {
+                    event.preventDefault();
+                    selectedTab = link.dataset.tab;
+                    renderTab();
+                });
+            });
+
+            partButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    activePart = button.dataset.part;
+                    renderPalette();
+                    updateR6Colors();
+                });
+            });
+
+            closePickerButton.addEventListener('click', closeColorPicker);
+            donePickerButton.addEventListener('click', closeColorPicker);
+
+            modal.addEventListener('click', event => {
+                if (event.target === modal) {
+                    closeColorPicker();
+                }
+            });
+
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    closeColorPicker();
+                }
+            });
+
+            loadCharacter();
+        })();
+    </script>
+
+    <%- include('pieces/footer') %>
+</body>

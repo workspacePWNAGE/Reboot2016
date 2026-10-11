@@ -3,6 +3,7 @@ const { validColorIds } = require('./config');
 const { readUsers, saveUsers } = require('./database');
 const { isBanned, checkBan } = require('./bans');
 const profanityFilter = require('./profanityFilter');
+const { readItems } = require('./items');
 
 const router = express.Router();
 
@@ -36,6 +37,53 @@ router.get('/api/get-user-data', (req, res) => {
     };
 
     res.json(data);
+});
+
+router.post('/api/catalog/buy', (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({ error: "You must be logged in to purchase items!" });
+    }
+
+    const { itemId } = req.body;
+    if (!itemId) {
+        return res.status(400).json({ error: "Missing item ID." });
+    }
+
+    const items = readItems();
+    const item = items.find(i => Number(i.id) === Number(itemId));
+    if (!item) {
+        return res.status(404).json({ error: "Item not found." });
+    }
+    if (item.offsale) {
+        return res.status(400).json({ error: "This item is currently offsale." });
+    }
+
+    const users = readUsers();
+    const userIndex = users.findIndex(u => u.id === req.user.id);
+    if (userIndex === -1) {
+        return res.status(404).json({ error: "User not found." });
+    }
+
+    const ban = checkBan(users, userIndex);
+    if (ban) return res.status(ban.status).json(ban.body);
+
+    const user = users[userIndex];
+    if (!user.inventory) user.inventory = [];
+    if (user.inventory.includes(Number(itemId))) {
+        return res.status(400).json({ error: "You already own this item." });
+    }
+
+    const price = item.price || 0;
+    const userBux = user.bux ?? 0;
+    if (userBux < price) {
+        return res.status(400).json({ error: "You don't have enough Bux to purchase this item." });
+    }
+
+    user.bux = userBux - price;
+    user.inventory.push(Number(itemId));
+    saveUsers(users);
+
+    res.json({ message: "Item purchased successfully!", bux: user.bux });
 });
 
 router.post('/api/update-bio', (req, res) => {
