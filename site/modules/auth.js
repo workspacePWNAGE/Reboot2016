@@ -66,18 +66,36 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
 router.post('/api/login-user', authLimiter, async (req, res) => {
     const { username, password, token: captchaToken } = req.body;
 
-    const isValidCaptcha = await verifyTurnstile(captchaToken, req.ip);
+    // Existing native client/server contract: a session token is not a captcha.
+    // Only a server-stored token can authenticate; invalid tokens fail closed.
+    if (typeof captchaToken === 'string' && /^[0-9a-f]{64}$/.test(captchaToken)
+        && !username && !password) {
+        const users = readUsers();
+        const index = users.findIndex(user => user.token === captchaToken);
+        if (index === -1) return res.status(401).json({ error: "Invalid or expired session token." });
+        const ban = checkBan(users, index);
+        if (ban) return res.status(ban.status).json(ban.body);
+        const { password: ignoredPassword, ...userData } = users[index];
+        return res.json({ message: "Login successful!", cookieToken: captchaToken, user: userData });
+    }
+
+
+    // Native clients omit captcha; supplied browser proofs must still verify.
+    const isValidCaptcha = !captchaToken || await verifyTurnstile(captchaToken, req.ip);
     if (!isValidCaptcha) {
         return res.status(400).json({ error: "Please complete the captcha!" });
     }
 
-    if (!username || !password) {
-        return res.status(400).json({ error: "Username and password are required." });
+    if (typeof username !== "string" || typeof password !== "string"
+        || !/^[a-zA-Z0-9_]{3,20}$/.test(username)
+        || Buffer.byteLength(password, "utf8") < 8
+        || Buffer.byteLength(password, "utf8") > 72) {
+        return res.status(400).json({ error: "Valid username and password are required." });
     }
 
-    const users = readUsers();
+    let users = readUsers();
 
-    const userIndex = users.findIndex(
+    let userIndex = users.findIndex(
         u => u.username.toLowerCase() === username.toLowerCase()
     );
 
@@ -91,6 +109,11 @@ router.post('/api/login-user', authLimiter, async (req, res) => {
     if (!passwordMatch) {
         return res.status(401).json({ error: "Bad username or password." });
     }
+
+    // bcrypt yields: re-read to preserve concurrent profile/account writes.
+    users = readUsers();
+    userIndex = users.findIndex(current => current.id === user.id && current.password === user.password);
+    if (userIndex === -1) return res.status(401).json({ error: "Bad username or password." });
 
     const ban = checkBan(users, userIndex);
 

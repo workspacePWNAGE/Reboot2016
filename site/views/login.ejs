@@ -19,8 +19,6 @@
 
             <h1>Password</h1>
             <input type="password" name="password" placeholder="Password" autocomplete="current-password" maxlength="128" required> <br><br>
-                
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAAFTaiTGdkfynblAX"></div> <br><br>
 
             <input type="submit" id="loginSubmit" value="Login" style="padding: 5px 30px;">
         </form>
@@ -50,12 +48,11 @@
 
             try {
                 const formData = new FormData(form);
-                const turnstileResponse = formData.get('cf-turnstile-response');
 
                 const res = await fetch('/api/login-user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, token: turnstileResponse })
+                    body: JSON.stringify({ username, password })
                 });
 
                 let data = {};
