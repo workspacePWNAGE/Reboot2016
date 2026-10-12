@@ -9,19 +9,13 @@ const { runCommand } = require('./adminCommands');
 const adminLog = require('./adminLog');
 const { readItems, saveItems, getNextItemId } = require('./items');
 const { readUsers, saveUsers } = require('./database');
+const { TEXTURE_DIR, MESH_DIR, SOUND_DIR, PLACE_DIR, HAT_DIR, RENDERER_TEXTURE_DIR } = require('./assetPaths');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const RENDERER_URL = (process.env.AVATAR_RENDERER_URL || 'http://0.0.0.0:4417').replace(/\/+$/, '');
 const RENDERER_API_KEY = process.env.AVATAR_RENDERER_API_KEY || '';
-
-const TEXTURE_DIR = path.resolve(ROOT, 'data', 'assets', 'textures');
-const SOUND_DIR = path.resolve(ROOT, 'data', 'assets', 'sounds');
-const PLACE_DIR = path.resolve(ROOT, 'data', 'places');
-const RENDERER_TEXTURE_DIR = process.env.RENDERER_TEXTURE_DIR
-    ? path.resolve(process.env.RENDERER_TEXTURE_DIR)
-    : path.resolve(ROOT, 'content', 'textures');
 
 const TEXTURE_TYPES = ['texture', 'shirt', 'pants', 'face'];
 
@@ -41,6 +35,28 @@ function getMaxId(dirs) {
     return maxId;
 }
 
+async function checkHatWithRenderer(xml) {
+    const headers = { 'Content-Type': 'text/xml' };
+    if (RENDERER_API_KEY) headers['X-Api-Key'] = RENDERER_API_KEY;
+
+    let response;
+    try {
+        response = await fetch(`${RENDERER_URL}/hats/check`, {
+            method: 'POST',
+            headers,
+            body: xml,
+            signal: AbortSignal.timeout(15000)
+        });
+    } catch (err) {
+        return { ok: false, problems: [`Could not reach the renderer to check the hat (${err.message}).`] };
+    }
+
+    const data = await response.json().catch(() => null);
+    if (!data) return { ok: false, problems: [`The renderer answered HTTP ${response.status} without JSON.`] };
+    if (data.ok) return data;
+    return { ok: false, problems: data.problems || [data.error || `Renderer failed with HTTP ${response.status}.`] };
+}
+
 async function renderAndSaveItemThumbnail(itemId, type, textureFileName) {
     try {
         const params = new URLSearchParams();
@@ -50,6 +66,7 @@ async function renderAndSaveItemThumbnail(itemId, type, textureFileName) {
         if (type === 'shirt') params.set('shirt', textureFileName);
         if (type === 'pants') params.set('pants', textureFileName);
         if (type === 'face') params.set('face', textureFileName);
+        if (type === 'hat') params.set('hat', textureFileName);
 
         const headers = {};
         if (RENDERER_API_KEY) headers['X-Api-Key'] = RENDERER_API_KEY;
@@ -117,6 +134,31 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
         return res.status(400).json({ error: "Missing needed fields: 'file' or 'type'" });
     }
 
+    if (type === 'mesh') {
+        const meshExt = path.extname(file.originalname).toLowerCase();
+        if (meshExt === '.obj') {
+            const text = file.buffer.toString('utf8');
+            if (!/^\s*v\s/m.test(text) || !/^\s*f\s/m.test(text)) {
+                return res.status(400).json({ error: "That doesn't look like an .obj mesh (no 'v' vertex lines or 'f' faces)." });
+            }
+        } else if (meshExt === '.mesh') {
+            if (file.buffer.slice(0, 8).toString('latin1') !== 'version ') {
+                return res.status(400).json({ error: "That doesn't look like a Roblox .mesh file (missing 'version' header)." });
+            }
+        } else {
+            return res.status(400).json({ error: "Meshes must be .obj files (or Roblox .mesh)." });
+        }
+    }
+
+    let hatName = '';
+    if (type === 'hat') {
+        const check = await checkHatWithRenderer(file.buffer.toString('utf8'));
+        if (!check.ok) {
+            return res.status(400).json({ error: `Hat rejected:\n - ${check.problems.join('\n - ')}` });
+        }
+        hatName = check.name || '';
+    }
+    
     let primaryDir;
     let idDirs;
     if (type === 'sound') {
@@ -125,6 +167,12 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
     } else if (type === 'place') {
         primaryDir = PLACE_DIR;
         idDirs = [PLACE_DIR];
+    } else if (type === 'hat') {
+        primaryDir = HAT_DIR;
+        idDirs = [HAT_DIR];
+    } else if (type === 'mesh') {
+        primaryDir = MESH_DIR;
+        idDirs = [MESH_DIR];
     } else if (TEXTURE_TYPES.includes(type)) {
         primaryDir = TEXTURE_DIR;
         idDirs = [TEXTURE_DIR, RENDERER_TEXTURE_DIR];
@@ -133,7 +181,7 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
     }
 
     const newId = getMaxId(idDirs) + 1;
-    const ext = path.extname(file.originalname);
+    const ext = type === 'hat' ? '.rbxm' : path.extname(file.originalname);
     const fileName = `${newId}${ext}`;
 
     try {
@@ -157,10 +205,10 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
     }
 
     let catalogMsg = '';
-    if (['shirt', 'pants', 'face'].includes(type)) {
+    if (['shirt', 'pants', 'face', 'hat'].includes(type)) {
         const items = readItems();
         const itemId = getNextItemId(items);
-        const itemName = name && typeof name === 'string' && name.trim() ? name.trim() : `New ${type} ${newId}`;
+        const itemName = name && typeof name === 'string' && name.trim() ? name.trim() : (hatName || `New ${type} ${newId}`);
         const itemDesc = description && typeof description === 'string' && description.trim() ? description.trim() : `Uploaded ${type} item.`;
         const itemPrice = price !== undefined && !isNaN(parseInt(price, 10)) ? parseInt(price, 10) : 0;
 
@@ -169,7 +217,8 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
             type: type,
             name: itemName,
             description: itemDesc,
-            texture: fileName,
+            texture: type === 'hat' ? '' : fileName,
+            ...(type === 'hat' ? { model: fileName } : {}),
             renderId: 0,
             price: itemPrice,
             offsale: false
@@ -182,7 +231,11 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
 
     adminLog.record(req.user, `upload ${type}`, `Success: uploaded ${type} as asset ${newId}${catalogMsg}`);
 
-    res.json({ message: `Successfully uploaded ${type}! Assigned Asset ID: ${newId}${catalogMsg}` });
+    let hint = '';
+    if (type === 'mesh') hint = ` Use /api/get-mesh?id=${newId} as the MeshId in a hat model.`;
+    else if (type === 'texture') hint = ` Use /api/get-texture?id=${newId} as the TextureId in a hat model.`;
+
+    res.json({ message: `Successfully uploaded ${type}! Assigned Asset ID: ${newId}${catalogMsg}${hint}` });
 });
 
 router.post('/api/admin/items/edit', requireRole('administrator'), (req, res) => {
@@ -221,6 +274,13 @@ router.post('/api/admin/items/delete', requireRole('administrator'), (req, res) 
             }
         }
     }
+    if (item.model) {
+        const modelName = path.basename(String(item.model));
+        const modelPath = path.join(HAT_DIR, modelName);
+        if (fs.existsSync(modelPath)) {
+            try { fs.unlinkSync(modelPath); } catch (_) {}
+        }
+    }
     const thumbPath = path.resolve(ROOT, `./data/thumbnails/items/${item.id}.png`);
     if (fs.existsSync(thumbPath)) {
         try { fs.unlinkSync(thumbPath); } catch (_) {}
@@ -228,7 +288,7 @@ router.post('/api/admin/items/delete', requireRole('administrator'), (req, res) 
 
     items.splice(index, 1);
     saveItems(items);
-    res.json({ message: "Item deleted successfully along with its texture and thumbnail." });
+    res.json({ message: "Item deleted successfully along with its files and thumbnail." });
 });
 
 router.post('/api/admin/inventory/give', requireRole('administrator'), (req, res) => {

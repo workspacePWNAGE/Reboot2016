@@ -1,4 +1,17 @@
 const { readItems } = require('./items');
+const { readUsers } = require('./database');
+
+// item id -> how many users own it (counted once per user)
+function getOwnerCounts() {
+    const counts = new Map();
+    for (const user of readUsers()) {
+        if (!Array.isArray(user.inventory)) continue;
+        for (const id of new Set(user.inventory.map(Number))) {
+            counts.set(id, (counts.get(id) || 0) + 1);
+        }
+    }
+    return counts;
+}
 
 function getCatalogPageData(query) {
     const items = readItems();
@@ -16,7 +29,10 @@ function getCatalogPageData(query) {
     const currentPage = Math.min(page, totalPages);
     
     const startIndex = (currentPage - 1) * limit;
-    const catalogItems = filtered.slice(startIndex, startIndex + limit);
+    const ownerCounts = getOwnerCounts();
+    const catalogItems = filtered
+        .slice(startIndex, startIndex + limit)
+        .map(i => ({ ...i, sales: ownerCounts.get(Number(i.id)) || 0 }));
 
     const prevPage = currentPage > 1 ? currentPage - 1 : null;
     const nextPage = currentPage < totalPages ? currentPage + 1 : null;

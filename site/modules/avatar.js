@@ -71,10 +71,23 @@ function getAvatar(user) {
         avatar.bodycolors = {};
     }
     if (!avatar.items) {
-        avatar.items = { shirt: null, pants: null, face: null };
+        avatar.items = { shirt: null, pants: null, face: null, hat: null };
     }
 
     return avatar;
+}
+
+function ownedIds(user) {
+    return new Set((Array.isArray(user.inventory) ? user.inventory : []).map(Number));
+}
+
+function ownedEquipped(avatar, user) {
+    const owned = ownedIds(user);
+    const result = {};
+    for (const [type, id] of Object.entries(avatar.items || {})) {
+        result[type] = id && owned.has(Number(id)) ? id : null;
+    }
+    return result;
 }
 
 function requireLogin(req, res, next) {
@@ -117,7 +130,7 @@ router.get('/api/character/data', requireLogin, (req, res) => {
     const avatar = getAvatar(user);
 
     res.json({
-        avatar,
+        avatar: { ...avatar, items: ownedEquipped(avatar, user) },
         colors: colors.map(color => ({
             id: color.id,
             name: color.name || color.Name || `Color ${color.id}`,
@@ -127,15 +140,19 @@ router.get('/api/character/data', requireLogin, (req, res) => {
 });
 
 router.get('/api/character/items', requireLogin, (req, res) => {
+    const user = readUsers().find(u => u.id === req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    // Only items the user owns, not the whole catalog.
+    const owned = ownedIds(user);
     const type = req.query.type;
-    const items = readItems();
-    const filtered = type ? items.filter(i => i.type === type) : items;
+    const filtered = readItems().filter(i => owned.has(Number(i.id)) && (!type || i.type === type));
     res.json({ items: filtered });
 });
 
 router.post('/api/character/equip', requireLogin, (req, res) => {
     const { type, itemId } = req.body;
-    if (!['shirt', 'pants', 'face'].includes(type)) {
+    if (!['shirt', 'pants', 'face', 'hat'].includes(type)) {
         return res.status(400).json({ error: 'Invalid item type.' });
     }
 
@@ -154,6 +171,9 @@ router.post('/api/character/equip', requireLogin, (req, res) => {
         const items = readItems();
         const item = items.find(i => i.id === Number(itemId) && i.type === type);
         if (!item) return res.status(404).json({ error: 'Item not found.' });
+        if (!ownedIds(users[index]).has(item.id)) {
+            return res.status(403).json({ error: "You don't own that item." });
+        }
         avatar.items[type] = item.id;
     }
 
@@ -247,7 +267,7 @@ router.post('/api/character/render', requireLogin, async (req, res) => {
     }
 
     const items = readItems();
-    const equippedItems = avatar.items || {};
+    const equippedItems = ownedEquipped(avatar, user);
 
     if (equippedItems.face) {
         const faceItem = items.find(i => i.id === Number(equippedItems.face) && i.type === 'face');
@@ -260,6 +280,10 @@ router.post('/api/character/render', requireLogin, async (req, res) => {
     if (equippedItems.pants) {
         const pantsItem = items.find(i => i.id === Number(equippedItems.pants) && i.type === 'pants');
         if (pantsItem && pantsItem.texture) params.set('pants', pantsItem.texture);
+    }
+    if (equippedItems.hat) {
+        const hatItem = items.find(i => i.id === Number(equippedItems.hat) && i.type === 'hat');
+        if (hatItem && hatItem.model) params.append('hat', hatItem.model);
     }
 
     try {

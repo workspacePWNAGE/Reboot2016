@@ -4,6 +4,7 @@
 #include "raymath.h"
 #include "rlgl.h"
 
+#include <cfloat>
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -35,6 +36,9 @@ const float SPECULAR = 0.4f;
 const float GLOSS = 9.0f;
 
 constexpr int PART_COUNT = RenderRequest::PART_COUNT;
+
+// Roblox attaches a hat's AttachmentPoint to the top of the head (head is 1 stud tall).
+constexpr float HEAD_HALF_HEIGHT = 0.5f;
 
 // Indices into Impl::parts, matching RenderRequest::colors / PART_KEYS.
 enum PartId
@@ -264,6 +268,19 @@ float zoomExtentsDistance(const BoundingBox &extents, Vector3 focus, Vector3 dir
     return used;
 }
 
+// Frames `extents` the way the thumbnail camera does: look at the centre of the
+// (slightly expanded) box from the thumbnail direction, as close as still fits.
+void fitCamera(BoundingBox extents, Vector3 &focus, Vector3 &camPos)
+{
+    extents.min = Vector3SubtractValue(extents.min, EXPAND);
+    extents.max = Vector3AddValue(extents.max, EXPAND);
+
+    focus = Vector3Scale(Vector3Add(extents.min, extents.max), 0.5f);
+    Vector3 camDir = thumbnailDirection(MODEL_LOOK);
+    float distance = zoomExtentsDistance(extents, focus, camDir);
+    camPos = Vector3Add(focus, Vector3Scale(camDir, distance));
+}
+
 std::string base64Encode(const unsigned char *data, size_t len)
 {
     static const char T[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -316,6 +333,8 @@ struct AvatarRenderer::Impl
     Vector3 focus = {};
     int useTexLoc = -1;
     int hqLoc = -1;
+    int camLoc = -1;
+    BoundingBox bodyBox = {}; // body extents, before the camera padding
 
     Part parts[PART_COUNT] = {
         {"head.obj", {0.0f, 1.5f, 0.0f}, {1, 1, 1}, {}, {}, {}},
@@ -350,6 +369,134 @@ struct AvatarRenderer::Impl
         windowOpen = false;
     }
 };
+
+// ---------------------------------------------------------------------------
+// Hats
+// ---------------------------------------------------------------------------
+
+namespace
+{
+
+struct HatDraw
+{
+    Model model = {};
+    Texture2D tex = {};        // the hat's own texture (id 0 = untextured)
+    Texture2D defaultTex = {}; // what the material held before ours went in
+    Color tint = WHITE;        // handle colour; shows through transparent texture areas
+    BoundingBox box = {};      // world-space extents, so the camera can include the hat
+};
+
+// Roblox wears a hat with   Handle = HeadTop * AttachmentPoint^-1
+// (the hat's AttachmentPoint is glued to the top of the head). The mesh is
+// scaled by SpecialMesh.Scale, shifted by Offset, then placed with that matrix.
+// Roblox and raylib are both right-handed, Y up, so no axis flipping is needed.
+bool loadHatDraw(const Shader &shader, const HatModel &h, Vector3 headTop, HatDraw &out, std::string &err)
+{
+    MeshData md;
+    if (!loadHatMeshData(h.meshData, md, err))
+    {
+        err = h.name + ": mesh " + h.meshId + ": " + err;
+        return false;
+    }
+
+    if (!h.textureData.empty())
+    {
+        Image img = LoadImageFromMemory(h.textureExt.c_str(), (const unsigned char *)h.textureData.data(), (int)h.textureData.size());
+        if (img.data == nullptr)
+        {
+            err = h.name + ": could not decode texture " + h.textureId;
+            return false;
+        }
+        out.tex = LoadTextureFromImage(img);
+        UnloadImage(img);
+        if (out.tex.id == 0)
+        {
+            err = h.name + ": could not upload texture " + h.textureId;
+            return false;
+        }
+    }
+
+    // R = transpose(AttachmentPoint rotation), t = headTop - R * AttachmentPoint position
+    float R[3][3];
+    for (int r = 0; r < 3; r++)
+        for (int c = 0; c < 3; c++)
+            R[r][c] = h.attachRot[c * 3 + r];
+    const float *ap = h.attachPos.data();
+
+    Matrix m = {};
+    m.m0 = R[0][0]; m.m4 = R[0][1]; m.m8 = R[0][2];
+    m.m1 = R[1][0]; m.m5 = R[1][1]; m.m9 = R[1][2];
+    m.m2 = R[2][0]; m.m6 = R[2][1]; m.m10 = R[2][2];
+    m.m12 = headTop.x - (R[0][0] * ap[0] + R[0][1] * ap[1] + R[0][2] * ap[2]);
+    m.m13 = headTop.y - (R[1][0] * ap[0] + R[1][1] * ap[1] + R[1][2] * ap[2]);
+    m.m14 = headTop.z - (R[2][0] * ap[0] + R[2][1] * ap[1] + R[2][2] * ap[2]);
+    m.m15 = 1.0f;
+
+    const int vc = (int)(md.pos.size() / 3);
+    Mesh mesh = {};
+    mesh.vertexCount = vc;
+    mesh.triangleCount = vc / 3;
+    mesh.vertices = (float *)MemAlloc((unsigned)(vc * 3 * sizeof(float)));
+    mesh.normals = (float *)MemAlloc((unsigned)(vc * 3 * sizeof(float)));
+    mesh.texcoords = (float *)MemAlloc((unsigned)(vc * 2 * sizeof(float)));
+
+    out.box.min = {FLT_MAX, FLT_MAX, FLT_MAX};
+    out.box.max = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
+
+    for (int v = 0; v < vc; v++)
+    {
+        Vector3 local = {
+            md.pos[v * 3 + 0] * h.scale[0] + h.offset[0],
+            md.pos[v * 3 + 1] * h.scale[1] + h.offset[1],
+            md.pos[v * 3 + 2] * h.scale[2] + h.offset[2]};
+
+        mesh.vertices[v * 3 + 0] = local.x;
+        mesh.vertices[v * 3 + 1] = local.y;
+        mesh.vertices[v * 3 + 2] = local.z;
+        mesh.normals[v * 3 + 0] = md.nrm[v * 3 + 0];
+        mesh.normals[v * 3 + 1] = md.nrm[v * 3 + 1];
+        mesh.normals[v * 3 + 2] = md.nrm[v * 3 + 2];
+        mesh.texcoords[v * 2 + 0] = md.uv[v * 2 + 0];
+        mesh.texcoords[v * 2 + 1] = md.uv[v * 2 + 1];
+
+        Vector3 w = Vector3Transform(local, m);
+        out.box.min = Vector3Min(out.box.min, w);
+        out.box.max = Vector3Max(out.box.max, w);
+    }
+
+    UploadMesh(&mesh, false);
+    out.model = LoadModelFromMesh(mesh);
+    out.model.transform = m;
+
+    Material &mat = out.model.materials[0];
+    out.defaultTex = mat.maps[MATERIAL_MAP_DIFFUSE].texture;
+    if (out.tex.id > 0)
+        mat.maps[MATERIAL_MAP_DIFFUSE].texture = out.tex;
+    mat.maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
+    mat.shader = shader;
+
+    out.tint = colorFromRgb(h.color);
+    return true;
+}
+
+void unloadHatDraw(HatDraw &d)
+{
+    if (d.model.meshCount > 0)
+    {
+        // same dance as Impl::shutdown(): don't let UnloadModel free the shared
+        // shader or raylib's default texture
+        Material &mat = d.model.materials[0];
+        mat.maps[MATERIAL_MAP_DIFFUSE].texture = d.defaultTex;
+        mat.shader.id = rlGetShaderIdDefault();
+        mat.shader.locs = rlGetShaderLocsDefault();
+        UnloadModel(d.model);
+    }
+    if (d.tex.id > 0)
+        UnloadTexture(d.tex);
+    d = HatDraw{};
+}
+
+} // namespace
 
 AvatarRenderer::AvatarRenderer() : impl_(new Impl) {}
 AvatarRenderer::~AvatarRenderer() = default;
@@ -417,19 +564,15 @@ bool AvatarRenderer::init(const std::string &contentDir, const std::string &text
         }
     }
 
-    extents.min = Vector3SubtractValue(extents.min, EXPAND);
-    extents.max = Vector3AddValue(extents.max, EXPAND);
-
-    s.focus = Vector3Scale(Vector3Add(extents.min, extents.max), 0.5f);
-    Vector3 camDir = thumbnailDirection(MODEL_LOOK);
-    float distance = zoomExtentsDistance(extents, s.focus, camDir);
-    s.camPos = Vector3Add(s.focus, Vector3Scale(camDir, distance));
+    s.bodyBox = extents;
+    fitCamera(extents, s.focus, s.camPos);
 
     Vector3 lamp0Dir = Vector3Normalize(LAMP0_DIR);
     Vector2 specParams = {SPECULAR, GLOSS};
     Vector4 fogParams = {0.0f, 0.0f, FOG_END, 1.0f / (FOG_END - FOG_START)};
 
-    SetShaderValue(s.shader, GetShaderLocation(s.shader, "CameraPosition"), &s.camPos, SHADER_UNIFORM_VEC3);
+    s.camLoc = GetShaderLocation(s.shader, "CameraPosition");
+    SetShaderValue(s.shader, s.camLoc, &s.camPos, SHADER_UNIFORM_VEC3);
     SetShaderValue(s.shader, GetShaderLocation(s.shader, "AmbientColor"), &AMBIENT_COLOR, SHADER_UNIFORM_VEC3);
     SetShaderValue(s.shader, GetShaderLocation(s.shader, "Lamp0Color"), &LAMP0_COLOR, SHADER_UNIFORM_VEC3);
     SetShaderValue(s.shader, GetShaderLocation(s.shader, "Lamp0Dir"), &lamp0Dir, SHADER_UNIFORM_VEC3);
@@ -504,8 +647,32 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
     };
 
     bool ok = true;
-    RenderTexture2D rt = LoadRenderTexture(req.size, req.size);
-    if (rt.id == 0)
+
+    // Hats: load meshes + textures first so a broken hat fails the whole render
+    // with a clear message instead of silently drawing a bald avatar.
+    std::vector<HatDraw> hats;
+    const Vector3 headTop = Vector3Add(s.parts[P_HEAD].pos, {0.0f, HEAD_HALF_HEIGHT, 0.0f});
+    for (const HatModel &h : req.hats)
+    {
+        HatDraw d;
+        if (!loadHatDraw(s.shader, h, headTop, d, err))
+        {
+            unloadHatDraw(d);
+            ok = false;
+            break;
+        }
+        hats.push_back(d);
+    }
+
+    RenderTexture2D rt = {};
+    if (ok)
+        rt = LoadRenderTexture(req.size, req.size);
+
+    if (!ok)
+    {
+        // err was set by the hat loader
+    }
+    else if (rt.id == 0)
     {
         err = "could not allocate render target";
         ok = false;
@@ -527,9 +694,24 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
         int hqInt = req.hq ? 1 : 0;
         SetShaderValue(s.shader, s.hqLoc, &hqInt, SHADER_UNIFORM_INT);
 
+        // With hats the camera is re-fitted so they stay in frame; without hats
+        // this is exactly the camera that init() worked out.
+        Vector3 camPos = s.camPos, focus = s.focus;
+        if (!hats.empty())
+        {
+            BoundingBox all = s.bodyBox;
+            for (const HatDraw &d : hats)
+            {
+                all.min = Vector3Min(all.min, d.box.min);
+                all.max = Vector3Max(all.max, d.box.max);
+            }
+            fitCamera(all, focus, camPos);
+        }
+        SetShaderValue(s.shader, s.camLoc, &camPos, SHADER_UNIFORM_VEC3);
+
         Camera3D cam = {};
-        cam.position = s.camPos;
-        cam.target = s.focus;
+        cam.position = camPos;
+        cam.target = focus;
         cam.up = {0, 1, 0};
         cam.fovy = FOV_DEG;
         cam.projection = CAMERA_PERSPECTIVE;
@@ -545,6 +727,16 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
             Part &p = s.parts[i];
             DrawModelEx(p.model, p.pos, {0, 1, 0}, 0.0f, p.scale, colorFromRgb(req.colors[i]));
         }
+
+        // Hat meshes: winding order isn't relied on, so draw both sides.
+        rlDisableBackfaceCulling();
+        for (HatDraw &d : hats)
+        {
+            int hasTex = d.tex.id > 0 ? 1 : 0;
+            SetShaderValue(s.shader, s.useTexLoc, &hasTex, SHADER_UNIFORM_INT);
+            DrawModelEx(d.model, {0, 0, 0}, {0, 1, 0}, 0.0f, {1, 1, 1}, d.tint);
+        }
+        rlEnableBackfaceCulling();
         EndMode3D();
         EndTextureMode();
 
@@ -576,6 +768,9 @@ bool AvatarRenderer::render(const RenderRequest &req, std::string &pngBase64, st
 
         UnloadRenderTexture(rt);
     }
+
+    for (HatDraw &d : hats)
+        unloadHatDraw(d);
 
     if (faceTex.id > 0)
         UnloadTexture(faceTex);

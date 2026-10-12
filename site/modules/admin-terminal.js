@@ -168,10 +168,10 @@ cliInput.addEventListener('keydown', async (e) => {
         printLine(`Upload Type: ${inputVal}`);
         const type = inputVal.toLowerCase();
 
-        if (['texture', 'sound', 'place', 'shirt', 'pants', 'face'].includes(type)) {
+        if (['texture', 'sound', 'place', 'shirt', 'pants', 'face', 'hat', 'mesh'].includes(type)) {
             startFilePick(type);
         } else {
-            printLine('Invalid type. Allowed: texture, sound, place, shirt, pants, face.', 'error');
+            printLine('Invalid type. Allowed: texture, sound, place, shirt, pants, face, hat, mesh.', 'error');
             resetPrompt();
         }
         return;
@@ -203,7 +203,7 @@ cliInput.addEventListener('keydown', async (e) => {
 
         if (cmd === 'upload' && result.ok && !/permission/i.test(result.text)) {
             state = 'UPLOAD_TYPE';
-            promptSymbol.innerText = 'Asset type (texture/sound/place/shirt/pants/face): ';
+            promptSymbol.innerText = 'Asset type (texture/sound/place/shirt/pants/face/hat/mesh): ';
             cliInput.style.display = 'block';
             cliInput.focus();
             return;

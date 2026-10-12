@@ -38,10 +38,12 @@ function serveAssetById(req, res, relativeDir, allowedExtensions = null) {
 }
 
 router.get('/api/get-texture', (req, res) => serveAssetById(req, res, './data/assets/textures'));
+router.get('/api/get-mesh', (req, res) => serveAssetById(req, res, './data/assets/meshes'));
 router.get('/api/get-sound', (req, res) => serveAssetById(req, res, './data/assets/sounds'));
 router.get('/api/get-place', (req, res) => serveAssetById(req, res, './data/places', ['.rbxl', '.rbxlx']));
 router.get('/api/get-thumbnail/place', (req, res) => serveAssetById(req, res, './data/thumbnails/places'));
 router.get('/api/get-thumbnail/player', (req, res) => serveAssetById(req, res, './data/thumbnails/players'));
 router.get('/api/get-thumbnail/item', (req, res) => serveAssetById(req, res, './data/thumbnails/items'));
+router.get('/api/get-model', (req, res) => serveAssetById(req, res, './data/models', ['.rbxm', '.rbxmx', '.xml']));
 
 module.exports = router;

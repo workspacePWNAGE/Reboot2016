@@ -9,6 +9,7 @@
 #define CPPHTTPLIB_THREAD_POOL_COUNT 80
 #include "httplib.h"
 
+#include "hat.hpp"
 #include "renderer.hpp"
 
 #include <algorithm>
@@ -45,10 +46,12 @@ struct Config
     std::string contentDir = "content";
     std::string textureDir = "";      // empty = defaults to <contentDir>/textures
     std::string siteUrl = "";         // e.g. http://localhost:3000 for fetching textures via API
+    std::string hatUrl = "";          // public site every URL in a hat model must be on, e.g. reboot16.xyz (empty = hats off)
     std::string host = "0.0.0.0";
     int port = 8080;          
     std::string apiKey;       
     size_t maxQueue = 64;     
+    size_t maxHats = 5;       // hats per render
     int maxSize = 1024;       
     int syncWaitSeconds = 90; 
     int resultTtlSeconds = 300;
@@ -58,10 +61,14 @@ static void usage(const char *argv0)
 {
     std::printf(
         "usage: %s [--content DIR] [--texture-dir DIR] [--site-url URL] [--port N] [--host ADDR] [--key SECRET]\n"
-        "          [--max-queue N] [--max-size PX]\n"
+        "          [--hat-url HOST] [--max-queue N] [--max-size PX]\n"
         "  --content      folder containing fonts/ and textures/   (default: content)\n"
         "  --texture-dir  folder containing local texture cache    (default: <content>/textures)\n"
         "  --site-url     website base URL for /api/get-texture?id=(default: none)\n"
+        "  --hat-url      public site every URL in a hat model must be on, e.g. reboot16.xyz\n"
+        "                 (also HAT_URL env var). Hats are downloaded from --site-url\n"
+        "                 (/api/get-model, /api/get-mesh, /api/get-texture) and are\n"
+        "                 disabled without both options.\n"
         "  --port         listen port                              (default: 8080)\n"
         "  --key          require this API key (X-Api-Key header or Bearer token);\n"
         "                 can also be set with the RENDER_API_KEY environment variable\n",
@@ -72,6 +79,8 @@ static bool parseArgs(int argc, char **argv, Config &c)
 {
     if (const char *k = std::getenv("RENDER_API_KEY"))
         c.apiKey = k;
+    if (const char *u = std::getenv("HAT_URL"))
+        c.hatUrl = u;
 
     for (int i = 1; i < argc; i++)
     {
@@ -91,6 +100,8 @@ static bool parseArgs(int argc, char **argv, Config &c)
             c.textureDir = v;
         else if (a == "--site-url")
             c.siteUrl = v;
+        else if (a == "--hat-url")
+            c.hatUrl = v;
         else if (a == "--host")
             c.host = v;
         else if (a == "--port")
@@ -419,6 +430,116 @@ static bool parseHexColor(std::string v, unsigned &out)
     return true;
 }
 
+static constexpr size_t MAX_MODEL_BYTES = 1u << 20;    // hat model XML
+static constexpr size_t MAX_MESH_BYTES = 32u << 20;    // hat mesh
+static constexpr size_t MAX_TEXTURE_BYTES = 16u << 20; // hat texture
+
+// GET <siteUrl><endpoint> into `body`. Hats always come from the site, never from disk.
+static bool fetchFromSite(const Config &cfg, const std::string &endpoint, size_t maxBytes, std::string &body, std::string &why)
+{
+    try
+    {
+        httplib::Client cli(cfg.siteUrl);
+        cli.set_connection_timeout(5);
+        cli.set_read_timeout(20);
+        auto res = cli.Get(endpoint.c_str());
+        if (!res)
+        {
+            why = "could not reach " + cfg.siteUrl;
+            return false;
+        }
+        if (res->status != 200)
+        {
+            why = "HTTP " + std::to_string(res->status);
+            return false;
+        }
+        if (res->body.empty() || res->body.size() > maxBytes)
+        {
+            why = res->body.empty() ? "empty response" : "file is too large";
+            return false;
+        }
+        body = std::move(res->body);
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        why = e.what();
+        return false;
+    }
+}
+
+static bool hatsEnabled(const Config &cfg, std::vector<std::string> &problems)
+{
+    if (cfg.hatUrl.empty())
+        problems.push_back("hats are disabled: no hat URL is configured (set --hat-url)");
+    else if (cfg.siteUrl.empty())
+        problems.push_back("hats are disabled: models, meshes and textures are fetched from the site, set --site-url");
+    return problems.empty();
+}
+
+// Downloads the mesh and texture a parsed hat points at. A 404 means the asset doesn't exist.
+// validateMesh also parses the mesh now (used by /hats/check; a render parses it anyway).
+static void fetchHatAssets(const Config &cfg, HatModel &hat, std::vector<std::string> &problems, bool validateMesh)
+{
+    std::string why;
+
+    if (!hat.meshId.empty())
+    {
+        std::string ep = std::string(HAT_MESH_ENDPOINT) + "?id=" + hat.meshId;
+        if (!fetchFromSite(cfg, ep, MAX_MESH_BYTES, hat.meshData, why))
+            problems.push_back("mesh " + hat.meshId + " could not be fetched from the site (" + why + ")");
+        else if (validateMesh)
+        {
+            MeshData md;
+            std::string err;
+            if (!loadHatMeshData(hat.meshData, md, err))
+                problems.push_back("mesh " + hat.meshId + " is not usable: " + err);
+        }
+    }
+
+    if (!hat.textureId.empty())
+    {
+        std::string ep = std::string(HAT_TEXTURE_ENDPOINT) + "?id=" + hat.textureId;
+        if (!fetchFromSite(cfg, ep, MAX_TEXTURE_BYTES, hat.textureData, why))
+            problems.push_back("texture " + hat.textureId + " could not be fetched from the site (" + why + ")");
+        else
+        {
+            hat.textureExt = imageExtension(hat.textureData);
+            if (hat.textureExt.empty())
+                problems.push_back("texture " + hat.textureId + " must be a PNG, JPG or BMP image");
+        }
+    }
+}
+
+// The whole pipeline for a hat model that is already on the site:
+// download its XML, check it, download its mesh + texture.
+static bool loadHatById(const Config &cfg, const std::string &id, HatModel &hat, std::vector<std::string> &problems)
+{
+    problems.clear();
+    if (!hatsEnabled(cfg, problems))
+        return false;
+
+    std::string xml, why;
+    if (!fetchFromSite(cfg, std::string(HAT_MODEL_ENDPOINT) + "?id=" + id, MAX_MODEL_BYTES, xml, why))
+    {
+        problems.push_back("hat model " + id + " could not be fetched from the site (" + why + ")");
+        return false;
+    }
+    if (!parseHatXml(xml, cfg.hatUrl, hat, problems))
+        return false;
+
+    fetchHatAssets(cfg, hat, problems, false);
+    return problems.empty();
+}
+
+static std::string joinProblems(const std::vector<std::string> &problems)
+{
+    std::string s;
+    for (size_t i = 0; i < problems.size(); i++)
+        s += (i ? "; " : "") + problems[i];
+    return s;
+}
+
 static bool parseRequest(const httplib::Request &req, const Config &cfg, RenderRequest &out, std::string &err)
 {
     if (req.has_param("size"))
@@ -477,6 +598,39 @@ static bool parseRequest(const httplib::Request &req, const Config &cfg, RenderR
     };
     if (!texture("face", out.face) || !texture("shirt", out.shirt) || !texture("pants", out.pants))
         return false;
+
+    // hat=<model id>, repeatable:  hat=12&hat=13   ("12.rbxm" is accepted too).
+    // Each one is downloaded from the site (/api/get-model?id=12), then its mesh + texture.
+    size_t hatCount = req.get_param_value_count("hat");
+    if (hatCount > cfg.maxHats)
+    {
+        err = "too many hats (max " + std::to_string(cfg.maxHats) + ")";
+        return false;
+    }
+    for (size_t i = 0; i < hatCount; i++)
+    {
+        std::string v = req.get_param_value("hat", i);
+        if (v.empty() || v == "none")
+            continue;
+        size_t digits = 0;
+        while (digits < v.size() && std::isdigit((unsigned char)v[digits]))
+            digits++;
+        if (digits == 0 || digits > 12 || (digits < v.size() && v[digits] != '.'))
+        {
+            err = "hat must be a model id like 12";
+            return false;
+        }
+        const std::string id = v.substr(0, digits);
+
+        HatModel hat;
+        std::vector<std::string> problems;
+        if (!loadHatById(cfg, id, hat, problems))
+        {
+            err = "hat " + id + ": " + joinProblems(problems);
+            return false;
+        }
+        out.hats.push_back(std::move(hat));
+    }
 
     for (int i = 0; i < RenderRequest::PART_COUNT; i++)
     {
@@ -545,6 +699,7 @@ int main(int argc, char **argv)
 
     JobQueue queue(cfg.maxQueue, cfg.resultTtlSeconds);
     httplib::Server svr;
+    svr.set_payload_max_length(2 * 1024 * 1024); // hat models / forms are tiny
     svr.set_default_headers({{"Cache-Control", "no-store"}});
         
     svr.set_pre_routing_handler([&](const httplib::Request &req, httplib::Response &res) -> httplib::Server::HandlerResponse
@@ -597,6 +752,30 @@ int main(int argc, char **argv)
         std::string j = "{\"files\":[";
         for (size_t i = 0; i < names.size(); i++)
             j += (i ? "," : "") + jsonQuote(names[i]);
+        res.set_content(j + "]}", "application/json"); });
+
+    // POST /hats/check   body = the hat's XML model (not stored on the site yet)
+    // Runs the checks a render does: every URL on --hat-url, MeshId/TextureId on the asset
+    // endpoints, and the mesh and texture actually downloadable from --site-url (and the mesh readable).
+    // 200 {"ok":true,...} or 400 {"ok":false,"problems":[...]}.
+    svr.Post("/hats/check", [&](const httplib::Request &req, httplib::Response &res)
+             {
+        HatModel hat;
+        std::vector<std::string> problems;
+        if (hatsEnabled(cfg, problems) && parseHatXml(req.body, cfg.hatUrl, hat, problems))
+            fetchHatAssets(cfg, hat, problems, true);
+        if (problems.empty())
+        {
+            res.set_content("{\"ok\":true,\"name\":" + jsonQuote(hat.name) +
+                                ",\"mesh\":" + jsonQuote(hat.meshUrl) +
+                                ",\"texture\":" + jsonQuote(hat.textureUrl) + "}",
+                            "application/json");
+            return;
+        }
+        std::string j = "{\"ok\":false,\"problems\":[";
+        for (size_t i = 0; i < problems.size(); i++)
+            j += (i ? "," : "") + jsonQuote(problems[i]);
+        res.status = 400;
         res.set_content(j + "]}", "application/json"); });
 
     auto renderHandler = [&](const httplib::Request &req, httplib::Response &res)
@@ -702,6 +881,10 @@ int main(int argc, char **argv)
     std::printf("AvatarRenderer listening on http://%s:%d  (content: %s, textures: %s, siteUrl: %s, auth %s)\n",
                 cfg.host.c_str(), cfg.port, cfg.contentDir.c_str(), cfg.textureDir.c_str(), 
                 cfg.siteUrl.empty() ? "none" : cfg.siteUrl.c_str(), cfg.apiKey.empty() ? "off" : "on");
+    if (cfg.hatUrl.empty() || cfg.siteUrl.empty())
+        std::printf("hats: disabled (needs --hat-url and --site-url)\n");
+    else
+        std::printf("hats: URLs must be on %s, downloaded from %s\n", cfg.hatUrl.c_str(), cfg.siteUrl.c_str());
 
     while (!g_stop)
     {

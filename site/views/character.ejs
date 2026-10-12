@@ -333,10 +333,13 @@
                 content.appendChild(stage);
             }
 
+            const itemLabels = { shirt: 'shirts', pants: 'pants', face: 'faces', hat: 'hats' };
+
             async function renderItemTab(itemType) {
+                const label = itemLabels[itemType] || itemType + 's';
                 content.replaceChildren();
                 const loading = document.createElement('p');
-                loading.textContent = `Loading ${itemType}s...`;
+                loading.textContent = `Loading ${label}...`;
                 content.appendChild(loading);
 
                 try {
@@ -346,7 +349,11 @@
                     const items = res.items || [];
                     if (items.length === 0) {
                         const p = document.createElement('p');
-                        p.textContent = `No ${itemType}s available in the catalog.`;
+                        p.append(`You don't own any ${label} yet. `);
+                        const link = document.createElement('a');
+                        link.href = '/catalog';
+                        link.textContent = 'Browse the catalog';
+                        p.appendChild(link);
                         content.appendChild(p);
                         return;
                     }
@@ -369,7 +376,9 @@
                         img.alt = item.name;
                         img.onerror = () => {
                             img.onerror = null;
-                            img.src = `/api/get-texture?id=${item.id}`;
+                            // fall back to the texture's asset id (not the catalog id); hats have no texture
+                            const assetId = parseInt(item.texture, 10);
+                            if (!isNaN(assetId)) img.src = `/api/get-texture?id=${assetId}`;
                         };
                         card.appendChild(img);
 
@@ -396,7 +405,7 @@
                 } catch (err) {
                     content.replaceChildren();
                     const p = document.createElement('p');
-                    p.textContent = `Failed to load ${itemType}s: ${err.message}`;
+                    p.textContent = `Failed to load ${label}: ${err.message}`;
                     content.appendChild(p);
                 }
             }
@@ -424,12 +433,9 @@
                     renderColors();
                     return;
                 }
-                if (['shirts', 'pants', 'faces'].includes(selectedTab) || selectedTab === 'shirt' || selectedTab === 'pants' || selectedTab === 'face') {
-                    let t = selectedTab;
-                    if (t === 'shirts') t = 'shirt';
-                    if (t === 'pants') t = 'pants';
-                    if (t === 'faces') t = 'face';
-                    renderItemTab(t);
+                const tabTypes = { shirts: 'shirt', pants: 'pants', faces: 'face', hats: 'hat' };
+                if (tabTypes[selectedTab]) {
+                    renderItemTab(tabTypes[selectedTab]);
                     return;
                 }
 

@@ -7,6 +7,7 @@ const { readItems, saveItems } = require('./items');
 const fs = require('fs');
 const path = require('path');
 const { ROOT, colors } = require('./config');
+const { TEXTURE_DIR, RENDERER_TEXTURE_DIR, HAT_DIR } = require('./assetPaths');
 
 const MAX_BUX_GRANT = 1000000;
 const RENDERER_URL = (process.env.AVATAR_RENDERER_URL || 'http://0.0.0.0:4417').replace(/\/+$/, '');
@@ -20,16 +21,6 @@ const PARTS = {
     leftLeg: ['leftLeg', 'lleg'],
     rightLeg: ['rightLeg', 'rleg']
 };
-
-function getCandidateTextureDirs() {
-    return [
-        path.resolve(ROOT, 'content', 'textures'),
-        path.resolve(ROOT, 'build', 'content', 'textures'),
-        path.resolve(ROOT, 'bin', 'content', 'textures'),
-        path.resolve(ROOT, 'renderer', 'content', 'textures'),
-        path.resolve(process.cwd(), 'content', 'textures')
-    ];
-}
 
 function findColor(id) {
     return colors.find(color => String(color.id) === String(id));
@@ -95,6 +86,11 @@ async function rerenderUserThumbnail(user) {
         const pantsItem = items.find(i => i.id === Number(equipped.pants) && i.type === 'pants');
         if (pantsItem && pantsItem.texture) params.set('pants', pantsItem.texture);
     }
+    // hats: avatar.items.hat can be one item id or a list of them
+    for (const hatId of [].concat(equipped.hat || [])) {
+        const hatItem = items.find(i => i.id === Number(hatId) && i.type === 'hat');
+        if (hatItem && hatItem.model) params.append('hat', hatItem.model);
+    }
 
     const image = await callRenderer(params);
     const thumbDir = path.resolve(ROOT, './data/thumbnails/players');
@@ -110,6 +106,7 @@ async function rerenderItemThumbnail(item) {
     if (item.type === 'shirt') params.set('shirt', item.texture);
     if (item.type === 'pants') params.set('pants', item.texture);
     if (item.type === 'face') params.set('face', item.texture);
+    if (item.type === 'hat') params.set('hat', item.model);
 
     const image = await callRenderer(params);
     const thumbDir = path.resolve(ROOT, './data/thumbnails/items');
@@ -335,11 +332,19 @@ const COMMAND_LIST = [
 
             const item = items[index];
             if (item.texture) {
-                for (const dirPath of getCandidateTextureDirs()) {
-                    const texPath = path.join(dirPath, item.texture);
+                const textureName = path.basename(String(item.texture));
+                for (const dirPath of [TEXTURE_DIR, RENDERER_TEXTURE_DIR]) {
+                    const texPath = path.join(dirPath, textureName);
                     if (fs.existsSync(texPath)) {
                         try { fs.unlinkSync(texPath); } catch (_) {}
                     }
+                }
+            }
+            if (item.model) {
+                const modelName = path.basename(String(item.model));
+                const modelPath = path.join(HAT_DIR, modelName);
+                if (fs.existsSync(modelPath)) {
+                    try { fs.unlinkSync(modelPath); } catch (_) {}
                 }
             }
             const thumbPath = path.resolve(ROOT, `./data/thumbnails/items/${item.id}.png`);
@@ -349,7 +354,7 @@ const COMMAND_LIST = [
 
             items.splice(index, 1);
             saveItems(items);
-            return `Success: Deleted item ID ${itemId} along with its texture and thumbnail.`;
+            return `Success: Deleted item ID ${itemId} along with its files and thumbnail.`;
         }
     },
     {
@@ -451,7 +456,7 @@ const COMMAND_LIST = [
                 }
                 const items = readItems();
                 for (const i of items) {
-                    if (['shirt', 'pants', 'face'].includes(i.type)) {
+                    if (['shirt', 'pants', 'face', 'hat'].includes(i.type)) {
                         await rerenderItemThumbnail(i);
                         itemCount++;
                     }

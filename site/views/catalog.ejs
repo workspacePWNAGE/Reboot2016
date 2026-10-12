@@ -51,7 +51,8 @@
                          data-name="<%= item.name %>" 
                          data-description="<%= item.description || '' %>" 
                          data-price="<%= item.price %>" 
-                         data-offsale="<%= item.offsale %>">
+                         data-offsale="<%= item.offsale %>"
+                         data-sales="<%= item.sales || 0 %>">
                         <img src="/api/get-thumbnail/item?id=<%= item.id %>&v=<%= Date.now() %>">
                         <span><%= item.name %> | <%= item.price %> Bux</span>
                     </div>
@@ -66,6 +67,7 @@
             <img id="modalItemImg" src="" alt="Item preview" style="max-width: 200px; height: auto; margin: 10px 0;">
             <p id="modalItemDesc" style="font-size: 14px; color: #555;"></p>
             <p><strong>Price:</strong> <span id="modalItemPrice">0</span> Bux</p>
+            <p><strong>Bought by:</strong> <span id="modalItemSales">0 people</span></p>
             <p id="modalStatus" style="color: red; font-size: 13px;"></p>
             <br>
             <button type="button" id="confirmBuyBtn">Buy Item</button>
@@ -82,6 +84,8 @@
                 document.getElementById('modalItemName').textContent = card.dataset.name;
                 document.getElementById('modalItemDesc').textContent = card.dataset.description;
                 document.getElementById('modalItemPrice').textContent = card.dataset.price;
+                const sales = Number(card.dataset.sales) || 0;
+                document.getElementById('modalItemSales').textContent = sales === 1 ? '1 person' : sales.toLocaleString() + ' people';
                 document.getElementById('modalItemImg').src = `/api/get-thumbnail/item?id=${selectedItemId}&v=` + Date.now();
                 
                 const isOffsale = card.dataset.offsale === 'true';
