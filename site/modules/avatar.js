@@ -62,6 +62,15 @@ function colorHex(color) {
     return '7F7F7F';
 }
 
+const MAX_HATS = 3;
+
+function hatList(value) {
+    const ids = [].concat(value === undefined || value === null ? [] : value)
+        .map(Number)
+        .filter(id => Number.isInteger(id) && id > 0);
+    return [...new Set(ids)].slice(0, MAX_HATS);
+}
+
 function getAvatar(user) {
     const avatar = user.avatar && typeof user.avatar === 'object'
         ? user.avatar
@@ -71,8 +80,9 @@ function getAvatar(user) {
         avatar.bodycolors = {};
     }
     if (!avatar.items) {
-        avatar.items = { shirt: null, pants: null, face: null, hat: null };
+        avatar.items = { shirt: null, pants: null, face: null, hat: [] };
     }
+    avatar.items.hat = hatList(avatar.items.hat);
 
     return avatar;
 }
@@ -85,7 +95,11 @@ function ownedEquipped(avatar, user) {
     const owned = ownedIds(user);
     const result = {};
     for (const [type, id] of Object.entries(avatar.items || {})) {
-        result[type] = id && owned.has(Number(id)) ? id : null;
+        if (type === 'hat') {
+            result.hat = hatList(id).filter(hatId => owned.has(hatId));
+        } else {
+            result[type] = id && owned.has(Number(id)) ? id : null;
+        }
     }
     return result;
 }
@@ -143,7 +157,6 @@ router.get('/api/character/items', requireLogin, (req, res) => {
     const user = readUsers().find(u => u.id === req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found.' });
 
-    // Only items the user owns, not the whole catalog.
     const owned = ownedIds(user);
     const type = req.query.type;
     const filtered = readItems().filter(i => owned.has(Number(i.id)) && (!type || i.type === type));
@@ -164,7 +177,34 @@ router.post('/api/character/equip', requireLogin, (req, res) => {
     if (ban) return res.status(ban.status).json(ban.body);
 
     const avatar = getAvatar(users[index]);
-    
+
+    if (type === 'hat') {
+        const hats = hatList(avatar.items.hat);
+
+        if (itemId === null || itemId === undefined || itemId === '') {
+            avatar.items.hat = [];
+        } else if (req.body.equip === false) {
+            avatar.items.hat = hats.filter(id => id !== Number(itemId));
+        } else {
+            const item = readItems().find(i => i.id === Number(itemId) && i.type === 'hat');
+            if (!item) return res.status(404).json({ error: 'Item not found.' });
+            if (!ownedIds(users[index]).has(item.id)) {
+                return res.status(403).json({ error: "You don't own that item." });
+            }
+            if (!hats.includes(item.id)) {
+                if (hats.length >= MAX_HATS) {
+                    return res.status(400).json({ error: `You can only wear ${MAX_HATS} hats at once. Take one off first.` });
+                }
+                hats.push(item.id);
+            }
+            avatar.items.hat = hats;
+        }
+
+        users[index].avatar = avatar;
+        saveUsers(users);
+        return res.json({ message: 'Hats updated.', avatar });
+    }
+
     if (itemId === null || itemId === undefined || itemId === '') {
         avatar.items[type] = null;
     } else {
@@ -281,8 +321,8 @@ router.post('/api/character/render', requireLogin, async (req, res) => {
         const pantsItem = items.find(i => i.id === Number(equippedItems.pants) && i.type === 'pants');
         if (pantsItem && pantsItem.texture) params.set('pants', pantsItem.texture);
     }
-    if (equippedItems.hat) {
-        const hatItem = items.find(i => i.id === Number(equippedItems.hat) && i.type === 'hat');
+    for (const hatId of hatList(equippedItems.hat)) {
+        const hatItem = items.find(i => i.id === hatId && i.type === 'hat');
         if (hatItem && hatItem.model) params.append('hat', hatItem.model);
     }
 

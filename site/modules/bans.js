@@ -52,7 +52,7 @@ function checkBan(users, index) {
             banned: true,
             reason: user.banReason,
             expiresAt: permanent ? null : user.banExpiration,
-            redirect: '/moderated'      // website pages send banned users here
+            redirect: '/moderated'
         }
     };
 }

@@ -11,11 +11,35 @@
         
         <form method="get" action="/catalog">
             <input type="text" name="q" value="<%= q %>" placeholder="Search catalog..." maxlength="50" autocomplete="off">
+            <% if (type) { %><input type="hidden" name="type" value="<%= type %>"><% } %>
+            <% if (sort) { %><input type="hidden" name="sort" value="<%= sort %>"><% } %>
             <input type="submit" value="Search">
             <% if (q) { %>
-                <a href="/catalog">Clear</a>
+                <a href="<%= filterUrl({ q: '' }) %>">Clear</a>
             <% } %>
         </form>
+        <br>
+
+        <%
+            const typeFilters = [['', 'All'], ['hat', 'Hats'], ['shirt', 'Shirts'], ['pants', 'Pants'], ['face', 'Faces']];
+            const sortFilters = [
+                ['newest', 'Newest'],
+                ['oldest', 'Oldest'],
+                ['sales', 'Most sales'],
+                ['price-low', 'Lowest price - highest price'],
+                ['price-high', 'Highest price - lowest price']
+            ];
+        %>
+        <p class="catalogFilters">
+            <% typeFilters.forEach(([value, label], i) => { %>
+                <%= i ? ' | ' : '' %><% if (value === type) { %><strong><%= label %></strong><% } else { %><a href="<%= filterUrl({ type: value }) %>"><%= label %></a><% } %>
+            <% }) %>
+        </p>
+        <p class="catalogFilters">
+            <% sortFilters.forEach(([value, label], i) => { %>
+                <%= i ? ' | ' : '' %><% if (value === sort) { %><strong><%= label %></strong><% } else { %><a href="<%= filterUrl({ sort: value }) %>"><%= label %></a><% } %>
+            <% }) %>
+        </p>
         <br>
         
         <% if (totalPages > 1) { %>

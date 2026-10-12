@@ -333,6 +333,7 @@
                 content.appendChild(stage);
             }
 
+            const MAX_HATS = 3;
             const itemLabels = { shirt: 'shirts', pants: 'pants', face: 'faces', hat: 'hats' };
 
             async function renderItemTab(itemType) {
@@ -358,6 +359,13 @@
                         return;
                     }
 
+                    if (itemType === 'hat') {
+                        const worn = Array.isArray(avatar.items && avatar.items.hat) ? avatar.items.hat.length : 0;
+                        const info = document.createElement('p');
+                        info.textContent = `Wearing ${worn} of ${MAX_HATS} hats. Click a hat to put it on or take it off.`;
+                        content.appendChild(info);
+                    }
+
                     const listDiv = document.createElement('div');
                     listDiv.style.textAlign = 'left';
 
@@ -366,7 +374,9 @@
                         card.className = 'item';
                         card.style.cursor = 'pointer';
 
-                        const isEquipped = avatar.items && Number(avatar.items[itemType]) === Number(item.id);
+                        const isEquipped = itemType === 'hat'
+                            ? (avatar.items && Array.isArray(avatar.items.hat) && avatar.items.hat.map(Number).includes(Number(item.id)))
+                            : (avatar.items && Number(avatar.items[itemType]) === Number(item.id));
                         if (isEquipped) {
                             card.style.outline = '2px solid rgb(255, 127, 253)';
                         }
@@ -396,7 +406,11 @@
                         card.appendChild(title);
 
                         card.addEventListener('click', async () => {
-                            await equipItem(itemType, isEquipped ? null : item.id);
+                            if (itemType === 'hat') {
+                                await equipItem('hat', item.id, !isEquipped); // hats: add / remove just this one
+                            } else {
+                                await equipItem(itemType, isEquipped ? null : item.id);
+                            }
                         });
 
                         listDiv.appendChild(card);
@@ -410,12 +424,14 @@
                 }
             }
 
-            async function equipItem(type, itemId) {
+            async function equipItem(type, itemId, equip) {
                 setStatus('Updating item...');
                 try {
+                    const payload = { type, itemId };
+                    if (equip !== undefined) payload.equip = equip;
                     const res = await request('/api/character/equip', {
                         method: 'POST',
-                        body: JSON.stringify({ type, itemId })
+                        body: JSON.stringify(payload)
                     });
                     if (res.avatar) {
                         avatar = res.avatar;

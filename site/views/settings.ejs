@@ -19,20 +19,30 @@
             <br><br>
             <input type="submit" id="bioSubmit" value="Change Bio">
         </form>
+
+        <h2>Username</h2>
+        <h3 id="usernameError" style="color: #c00; display: none;"></h3>
+        <h3 id="usernameSuccess" style="color: #0c0; display: none;"></h3>
+
+        <form id="usernameForm" method="POST" action="/api/update-username">
+            <input id="usernameInput" style="width: 500px;" type="text" name="username" placeholder="Enter new username (can be changed once every 2 weeks)" required>
+            <br><br>
+            <input type="submit" id="usernameSubmit" value="Change Username">
+        </form>
     </div>
 
     <%- include('pieces/footer') %>
 
     <script nonce="<%= nonce %>">
-        const form = document.getElementById('bioForm');
+        const bioForm = document.getElementById('bioForm');
         const bioInput = document.getElementById('bioInput');
-        const errorBox = document.getElementById('settingsError');
-        const successBox = document.getElementById('settingsSuccess');
+        const bioErrorBox = document.getElementById('settingsError');
+        const bioSuccessBox = document.getElementById('settingsSuccess');
 
-        form.addEventListener('submit', async (e) => {
+        bioForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            errorBox.style.display = 'none';
-            successBox.style.display = 'none';
+            bioErrorBox.style.display = 'none';
+            bioSuccessBox.style.display = 'none';
 
             try {
                 const res = await fetch('/api/update-bio', {
@@ -44,15 +54,47 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    errorBox.textContent = data.error || 'Failed to update bio.';
-                    errorBox.style.display = 'block';
+                    bioErrorBox.textContent = data.error || 'Failed to update bio.';
+                    bioErrorBox.style.display = 'block';
                 } else {
-                    successBox.textContent = data.message || 'Bio updated successfully!';
-                    successBox.style.display = 'block';
+                    bioSuccessBox.textContent = data.message || 'Bio updated successfully!';
+                    bioSuccessBox.style.display = 'block';
                 }
             } catch (err) {
-                errorBox.textContent = "Couldn't reach the server.";
-                errorBox.style.display = 'block';
+                bioErrorBox.textContent = "Couldn't reach the server.";
+                bioErrorBox.style.display = 'block';
+            }
+        });
+
+        const usernameForm = document.getElementById('usernameForm');
+        const usernameInput = document.getElementById('usernameInput');
+        const userErrorBox = document.getElementById('usernameError');
+        const userSuccessBox = document.getElementById('usernameSuccess');
+
+        usernameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            userErrorBox.style.display = 'none';
+            userSuccessBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/update-username', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput.value })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    userErrorBox.textContent = data.error || 'Failed to update username.';
+                    userErrorBox.style.display = 'block';
+                } else {
+                    userSuccessBox.textContent = data.message || 'Username updated successfully!';
+                    userSuccessBox.style.display = 'block';
+                }
+            } catch (err) {
+                userErrorBox.textContent = "Couldn't reach the server.";
+                userErrorBox.style.display = 'block';
             }
         });
     </script>

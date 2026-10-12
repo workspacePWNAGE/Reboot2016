@@ -171,4 +171,57 @@ router.post('/api/update-avatar', (req, res) => {
     }
 });
 
+router.post('/api/update-username', (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({ error: "You must be logged in to update your username!" });
+    }
+
+    let { username } = req.body;
+
+    if (typeof username !== 'string') {
+        return res.status(400).json({ error: "Bad username format." });
+    }
+
+    username = username.trim();
+
+    if (username.length < 3 || username.length > 20) {
+        return res.status(400).json({ error: "Username must be between 3 and 20 characters!" });
+    }
+
+    const users = readUsers();
+    const userIndex = users.findIndex(u => u.id === req.user.id);
+
+    if (userIndex === -1) {
+        return res.status(404).json({ error: "User not found." });
+    }
+
+    const ban = checkBan(users, userIndex);
+    if (ban) return res.status(ban.status).json(ban.body);
+
+    const user = users[userIndex];
+
+    const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
+    if (user.lastUsernameChange && (Date.now() - user.lastUsernameChange < FOURTEEN_DAYS)) {
+        const remainingTime = FOURTEEN_DAYS - (Date.now() - user.lastUsernameChange);
+        const daysLeft = Math.ceil(remainingTime / (24 * 60 * 60 * 1000));
+        return res.status(400).json({ error: `Please wait ${daysLeft} more day(s) before changing your username!` });
+    }
+
+    const usernameTaken = users.some(u => u.username.toLowerCase() === username.toLowerCase() && u.id !== user.id);
+    if (usernameTaken) {
+        return res.status(400).json({ error: "This username is already taken." });
+    }
+
+    const check = profanityFilter.check(username);
+    if (check.profane) {
+        return res.status(400).json({ error: "Your username contains inappropriate text..." });
+    }
+
+    user.username = username;
+    user.lastUsernameChange = Date.now();
+    saveUsers(users);
+
+    res.json({ message: "Username updated successfully!" });
+});
+
 module.exports = router;

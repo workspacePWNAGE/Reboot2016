@@ -7,6 +7,7 @@ const { checkBan } = require('./bans');
 const { isReservedUsername } = require('./usernames');
 const { setSessionCookie } = require('./session');
 const { TURNSTILE_KEY } = require('./config');
+const profanityFilter = require('./profanityFilter');
 
 const router = express.Router();
 
@@ -29,6 +30,11 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
 
     if (isReservedUsername(username)) {
         return res.status(400).json({ error: "That username is reserved." });
+    }
+
+    const check = profanityFilter.check(username);
+    if (check.profane) {
+        return res.status(400).json({ error: "Your username contains inappropriate text..." });
     }
 
     const users = readUsers();
