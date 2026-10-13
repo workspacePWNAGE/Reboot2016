@@ -215,7 +215,7 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
         const itemPrice = price !== undefined && !isNaN(parseInt(price, 10)) ? parseInt(price, 10) : 0;
 
         if (offsale !== undefined) {
-            isOffsale = Boolean(offsale);
+            isOffsale = offsale === 'false' ? false : Boolean(offsale);
         }
 
         items.push({
