@@ -69,7 +69,7 @@ router.post('/api/register-user', authLimiter, async (req, res) => {
     res.status(201).json({ message: "User registered!", userId: newId });
 });
 
-router.post('/api/login-user', authLimiter, async (req, res) => {
+router.post('/api/login-user', async (req, res) => {
     const { username, password, token: captchaToken } = req.body;
 
     if (typeof captchaToken === 'string' && /^[0-9a-f]{64}$/.test(captchaToken)
