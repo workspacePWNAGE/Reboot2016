@@ -89,6 +89,23 @@ async function renderAndSaveItemThumbnail(itemId, type, textureFileName) {
     }
 }
 
+async function sendItemOnsaleWebhook(item) {
+    if (!ITEM_WEBHOOK) return;
+    try {
+        const resp = await fetch(ITEM_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                content: `**New Item Onsale!**\n**Name:** ${item.name}\n**Type:** ${item.type}\n**Price:** ${item.price} Bux\n**ID:** ${item.id}`
+            }),
+            signal: AbortSignal.timeout(5000)
+        });
+        if (!resp.ok) console.error('Item webhook failed:', resp.status, await resp.text());
+    } catch (err) {
+        console.error('Failed to send item webhook:', err.message);
+    }
+}
+
 router.get('/admin/terminal', (req, res) => {
     if (!req.user || !roleAtLeast(req.user, 'moderator')) return res.sendStatus(404);
     res.sendFile(path.join(ROOT, 'admin.html'));
@@ -233,21 +250,6 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
 
         await renderAndSaveItemThumbnail(itemId, type, fileName);
         catalogMsg = ` (Catalog Item ID: ${itemId})`;
-
-        if (!isOffsale && ITEM_WEBHOOK) {
-            try {
-                await fetch(ITEM_WEBHOOK, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: `**New Item Onsale!**\n**Name:** ${itemName}\n**Type:** ${type}\n**Price:** ${itemPrice} Bux\n**ID:** ${itemId}`
-                    }),
-                    signal: AbortSignal.timeout(5000)
-                });
-            } catch (webhookErr) {
-                console.error('Failed to send item webhook:', webhookErr.message);
-            }
-        }
     }
 
     adminLog.record(req.user, `upload ${type}`, `Success: uploaded ${type} as asset ${newId}${catalogMsg}`);
@@ -259,7 +261,7 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
     res.json({ message: `Successfully uploaded ${type}! Assigned Asset ID: ${newId}${catalogMsg}${hint}` });
 });
 
-router.post('/api/admin/items/edit', requireRole('administrator'), (req, res) => {
+router.post('/api/admin/items/edit', requireRole('administrator'), async (req, res) => {
     const { id, name, description, price, offsale, renderId } = req.body;
     if (!id) return res.status(400).json({ error: "Missing item ID." });
 
@@ -267,13 +269,24 @@ router.post('/api/admin/items/edit', requireRole('administrator'), (req, res) =>
     const index = items.findIndex(i => Number(i.id) === Number(id));
     if (index === -1) return res.status(404).json({ error: "Item not found." });
 
+    const wasOffsale = Boolean(items[index].offsale);
+
     if (name !== undefined) items[index].name = String(name).trim();
     if (description !== undefined) items[index].description = String(description).trim();
     if (price !== undefined) items[index].price = Math.max(0, parseInt(price, 10) || 0);
-    if (offsale !== undefined) items[index].offsale = Boolean(offsale);
+    if (offsale !== undefined) {
+        items[index].offsale = !(offsale === false || ['false', '0', 'off', 'no'].includes(String(offsale).toLowerCase()) === false && false)
+            ? !(offsale === false || ['false', '0', 'off', 'no'].includes(String(offsale).toLowerCase()))
+            : true;
+    }
     if (renderId !== undefined) items[index].renderId = parseInt(renderId, 10) || 0;
 
     saveItems(items);
+
+    if (wasOffsale && !items[index].offsale) {
+        await sendItemOnsaleWebhook(items[index]);
+    }
+
     res.json({ message: "Item updated successfully.", item: items[index] });
 });
 
