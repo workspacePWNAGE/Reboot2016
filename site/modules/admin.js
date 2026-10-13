@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const { ROOT, ITEM_WEBHOOK } = require('./config'); // Added ITEM_WEBHOOK here
+const { ROOT, ITEM_WEBHOOK } = require('./config');
 const { requireRole } = require('./session');
 const { roleAtLeast } = require('./roles');
 const { runCommand } = require('./adminCommands');
@@ -33,6 +33,16 @@ function getMaxId(dirs) {
         }
     }
     return maxId;
+}
+
+function parseOffsale(value) {
+    if (value === false) return false;
+    return !['false', '0', 'off', 'no'].includes(String(value).trim().toLowerCase());
+}
+
+function truncate(text, max) {
+    const s = String(text ?? '');
+    return s.length > max ? s.slice(0, max - 1) + '…' : s;
 }
 
 async function checkHatWithRenderer(xml) {
@@ -90,19 +100,40 @@ async function renderAndSaveItemThumbnail(itemId, type, textureFileName) {
 }
 
 async function sendItemOnsaleWebhook(item) {
-    if (!ITEM_WEBHOOK) return;
+    if (!ITEM_WEBHOOK) {
+        console.warn('[webhook] ITEM_WEBHOOK is not set in config.js, skipping onsale announcement.');
+        return;
+    }
+
     try {
         const resp = await fetch(ITEM_WEBHOOK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                content: `**New Item Onsale!**\n**Name:** ${item.name}\n**Type:** ${item.type}\n**Price:** ${item.price} Bux\n**ID:** ${item.id}`
+                username: 'Catalog',
+                allowed_mentions: { parse: [] },
+                embeds: [{
+                    title: 'New Item Onsale!',
+                    color: 0x57F287,
+                    fields: [
+                        { name: 'Name', value: truncate(item.name, 256) || '(unnamed)', inline: false },
+                        { name: 'Type', value: truncate(item.type, 64) || 'unknown', inline: true },
+                        { name: 'Price', value: `${item.price} Bux`, inline: true },
+                        { name: 'ID', value: String(item.id), inline: true }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
             }),
             signal: AbortSignal.timeout(5000)
         });
-        if (!resp.ok) console.error('Item webhook failed:', resp.status, await resp.text());
+
+        if (resp.ok) {
+            console.log(`[webhook] Announced item ${item.id} (${item.name}) as onsale.`);
+        } else {
+            console.error('[webhook] Item webhook failed:', resp.status, await resp.text());
+        }
     } catch (err) {
-        console.error('Failed to send item webhook:', err.message);
+        console.error('[webhook] Failed to send item webhook:', err.message);
     }
 }
 
@@ -175,7 +206,7 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
         }
         hatName = check.name || '';
     }
-    
+
     let primaryDir;
     let idDirs;
     if (type === 'sound') {
@@ -222,20 +253,17 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
     }
 
     let catalogMsg = '';
-    let isOffsale = true;
 
     if (['shirt', 'pants', 'face', 'hat'].includes(type)) {
         const items = readItems();
         const itemId = getNextItemId(items);
         const itemName = name && typeof name === 'string' && name.trim() ? name.trim() : (hatName || `New ${type} ${newId}`);
         const itemDesc = description && typeof description === 'string' && description.trim() ? description.trim() : `Uploaded ${type} item.`;
-        const itemPrice = price !== undefined && !isNaN(parseInt(price, 10)) ? parseInt(price, 10) : 0;
+        const itemPrice = price !== undefined && !isNaN(parseInt(price, 10)) ? Math.max(0, parseInt(price, 10)) : 0;
 
-        if (offsale !== undefined) {
-            isOffsale = offsale === 'false' ? false : Boolean(offsale);
-        }
+        const isOffsale = offsale === undefined ? true : parseOffsale(offsale);
 
-        items.push({
+        const newItem = {
             id: itemId,
             type: type,
             name: itemName,
@@ -245,11 +273,15 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
             renderId: 0,
             price: itemPrice,
             offsale: isOffsale
-        });
+        };
+
+        items.push(newItem);
         saveItems(items);
 
         await renderAndSaveItemThumbnail(itemId, type, fileName);
         catalogMsg = ` (Catalog Item ID: ${itemId})`;
+
+        if (!isOffsale) await sendItemOnsaleWebhook(newItem);
     }
 
     adminLog.record(req.user, `upload ${type}`, `Success: uploaded ${type} as asset ${newId}${catalogMsg}`);
@@ -269,25 +301,22 @@ router.post('/api/admin/items/edit', requireRole('administrator'), async (req, r
     const index = items.findIndex(i => Number(i.id) === Number(id));
     if (index === -1) return res.status(404).json({ error: "Item not found." });
 
-    const wasOffsale = Boolean(items[index].offsale);
+    const item = items[index];
+    const wasOffsale = Boolean(item.offsale);
 
-    if (name !== undefined) items[index].name = String(name).trim();
-    if (description !== undefined) items[index].description = String(description).trim();
-    if (price !== undefined) items[index].price = Math.max(0, parseInt(price, 10) || 0);
-    if (offsale !== undefined) {
-        items[index].offsale = !(offsale === false || ['false', '0', 'off', 'no'].includes(String(offsale).toLowerCase()) === false && false)
-            ? !(offsale === false || ['false', '0', 'off', 'no'].includes(String(offsale).toLowerCase()))
-            : true;
-    }
-    if (renderId !== undefined) items[index].renderId = parseInt(renderId, 10) || 0;
+    if (name !== undefined) item.name = String(name).trim();
+    if (description !== undefined) item.description = String(description).trim();
+    if (price !== undefined) item.price = Math.max(0, parseInt(price, 10) || 0);
+    if (offsale !== undefined) item.offsale = parseOffsale(offsale);
+    if (renderId !== undefined) item.renderId = parseInt(renderId, 10) || 0;
 
     saveItems(items);
-
-    if (wasOffsale && !items[index].offsale) {
-        await sendItemOnsaleWebhook(items[index]);
+    
+    if (wasOffsale && !item.offsale) {
+        await sendItemOnsaleWebhook(item);
     }
 
-    res.json({ message: "Item updated successfully.", item: items[index] });
+    res.json({ message: "Item updated successfully.", item });
 });
 
 router.post('/api/admin/items/delete', requireRole('administrator'), (req, res) => {
