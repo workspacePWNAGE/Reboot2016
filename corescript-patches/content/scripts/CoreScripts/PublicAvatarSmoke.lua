@@ -1,0 +1,23 @@
+local root=game:GetService('CoreGui'):WaitForChild('RobloxGui')
+local modules=root:WaitForChild('Modules');local http=game:GetService('HttpService')
+local account=require(modules.OfflineAccountProfile)
+while not account.Profile or not account.Profile.user_id or account.Profile.user_id<=0 do wait(.2)end
+wait(12)
+local bridge=modules:WaitForChild('LocalLibraryBridge')
+local function request(op,body)return http:JSONDecode(bridge:Profile(op,body and http:JSONEncode(body)or''))end
+local profile=request('get');assert(profile.username==account.Profile.username)
+assert(request('catalog').supports_outfits==false)
+assert(#request('outfits').outfits==0)
+require(modules.LocalAvatarCollection).OpenEditor();wait(3)
+local editor=assert(root.Parent:FindFirstChild('RecoveredAvatarCustomization'))
+assert(workspace:FindFirstChild('RecoveredAvatarEnvironment'))
+assert(workspace:FindFirstChild('LocalAvatarPreview'):FindFirstChild('Humanoid'))
+print('[OriginalLoginTest] Page ready');wait(3)
+local command=editor:WaitForChild('RecoveredEditorTest');command:Invoke('category','Skin Tone')
+local draft=http:JSONDecode(command:Invoke('appearance'))
+draft.body_colors.torso=28
+local saved=request('save',{appearance=draft})
+assert(saved.appearance.body_colors.torso==28 and saved.user_id==profile.user_id)
+assert(request('get').appearance.body_colors.torso==28)
+local ok=pcall(function()request('outfit-save',{name='Unsupported'})end);assert(not ok)
+print('[PublicAvatarTest] Original editor, room, R6 preview, category, authenticated color save/readback and unsupported outfits PASS')

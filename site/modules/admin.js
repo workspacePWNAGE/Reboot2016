@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const { ROOT } = require('./config');
+const { ROOT, ITEM_WEBHOOK } = require('./config'); // Added ITEM_WEBHOOK here
 const { requireRole } = require('./session');
 const { roleAtLeast } = require('./roles');
 const { runCommand } = require('./adminCommands');
@@ -127,7 +127,7 @@ router.post('/api/admin/terminal', requireRole('moderator'), async (req, res) =>
 });
 
 router.post('/api/admin/upload', requireRole('administrator'), upload.single('file'), async (req, res) => {
-    const { type, name, description, price } = req.body;
+    const { type, name, description, price, offsale } = req.body;
     const file = req.file;
 
     if (!file || !type) {
@@ -205,12 +205,18 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
     }
 
     let catalogMsg = '';
+    let isOffsale = true;
+
     if (['shirt', 'pants', 'face', 'hat'].includes(type)) {
         const items = readItems();
         const itemId = getNextItemId(items);
         const itemName = name && typeof name === 'string' && name.trim() ? name.trim() : (hatName || `New ${type} ${newId}`);
         const itemDesc = description && typeof description === 'string' && description.trim() ? description.trim() : `Uploaded ${type} item.`;
         const itemPrice = price !== undefined && !isNaN(parseInt(price, 10)) ? parseInt(price, 10) : 0;
+
+        if (offsale !== undefined) {
+            isOffsale = Boolean(offsale);
+        }
 
         items.push({
             id: itemId,
@@ -221,12 +227,27 @@ router.post('/api/admin/upload', requireRole('administrator'), upload.single('fi
             ...(type === 'hat' ? { model: fileName } : {}),
             renderId: 0,
             price: itemPrice,
-            offsale: false
+            offsale: isOffsale
         });
         saveItems(items);
 
         await renderAndSaveItemThumbnail(itemId, type, fileName);
         catalogMsg = ` (Catalog Item ID: ${itemId})`;
+
+        if (!isOffsale && ITEM_WEBHOOK) {
+            try {
+                await fetch(ITEM_WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `**New Item Onsale!**\n**Name:** ${itemName}\n**Type:** ${type}\n**Price:** ${itemPrice} Bux\n**ID:** ${itemId}`
+                    }),
+                    signal: AbortSignal.timeout(5000)
+                });
+            } catch (webhookErr) {
+                console.error('Failed to send item webhook:', webhookErr.message);
+            }
+        }
     }
 
     adminLog.record(req.user, `upload ${type}`, `Success: uploaded ${type} as asset ${newId}${catalogMsg}`);

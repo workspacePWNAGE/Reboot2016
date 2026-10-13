@@ -25,4 +25,5 @@ module.exports = {
     SESSION_COOKIE: 'r16-token',
     SESSION_MAX_AGE_MS: 30 * 24 * 60 * 60 * 1000,
     DAILY_BUX: 5,
+    ITEM_WEBHOOK: "https://discord.com/api/webhooks/1559382069493108976/7WoAtxkV-cYl11hcNdc_Fby5Qz-owZvNBJDsSnJsD8qrj1u_Q05brmMfcosnX-dHnecc",
 };
